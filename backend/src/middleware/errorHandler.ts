@@ -118,10 +118,14 @@ export const errorHandler = (
     code: (error as ApiError).code,
   };
   
-  // Ajouter la stack trace en développement
+  // Toujours renvoyer les détails de validation si présents, peu importe l'environnement
+  if ((error as ApiError).details) {
+    response.details = (error as ApiError).details;
+  }
+  
+  // Ajouter la stack trace uniquement en développement
   if (process.env.NODE_ENV === 'development') {
     response.stack = error.stack;
-    response.details = (error as ApiError).details;
   }
   
   res.status((error as ApiError).statusCode || 500).json(response);

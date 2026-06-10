@@ -8,11 +8,34 @@ import {
   validateBulkOperation,
   validateSortOrder
 } from '@/middleware/validation';
+import multer from 'multer';
 
 const router = Router();
 
+// Configure multer for image and video upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB (to accommodate videos)
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedImageTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    const allowedTypes = [...allowedImageTypes, ...allowedVideoTypes];
+    
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Type de fichier non autorisé. Formats acceptés: JPG, PNG, WebP, MP4, WebM'));
+    }
+  },
+});
+
 // Toutes les routes admin nécessitent une authentification
 router.use(authenticate);
+
+// Upload image
+router.post('/upload', uploadLimiter, upload.any(), galleryController.uploadImage.bind(galleryController));
 
 // CRUD operations
 router.post('/', uploadLimiter, validateGalleryImage, galleryController.createGalleryImage.bind(galleryController));

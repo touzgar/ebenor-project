@@ -6,11 +6,15 @@ import homeRoutes from './home';
 import mediaRoutes from './media';
 import auditRoutes from './audit';
 import messageRoutes from './messages';
+import categoryRoutes from './categories';
 
 const router = Router();
 
 // Apply CSRF validation to all admin routes
 router.use(validateCsrfToken);
+
+// Admin category routes
+router.use('/categories', categoryRoutes);
 
 // Admin product routes
 router.use('/products', productRoutes);

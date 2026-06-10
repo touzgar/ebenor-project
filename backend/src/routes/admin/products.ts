@@ -13,6 +13,9 @@ const router = Router();
 // Toutes les routes admin nécessitent une authentification
 router.use(authenticate);
 
+// Get all products (for admin list view)
+router.get('/', productController.getProducts.bind(productController));
+
 // CRUD operations
 router.post('/', uploadLimiter, validateProduct, productController.createProduct.bind(productController));
 router.put('/:id', uploadLimiter, validateObjectIdParam('id'), validateProduct, productController.updateProduct.bind(productController));

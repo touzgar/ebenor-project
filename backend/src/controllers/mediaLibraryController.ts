@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import { mediaLibraryService } from '@/services/mediaLibraryService';
+import { uploadThingService } from '@/services/uploadThingService';
 import { cloudinaryService } from '@/services/cloudinaryService';
 import { ApiError, ERROR_CODES } from '@/middleware/errorHandler';
 import { ApiResponse, PaginatedResponse } from '@/types';
@@ -115,7 +116,7 @@ export class MediaLibraryController {
 
   /**
    * Delete media
-   * DELETE /api/admin/media/:id
+   * DELETE /api/admin/media
    */
   public async deleteMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
@@ -145,6 +146,37 @@ export class MediaLibraryController {
       const response: ApiResponse = {
         success: true,
         message: 'Média supprimé avec succès',
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Delete all media
+   * DELETE /api/admin/media/all
+   */
+  public async deleteAllMedia(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const result = await mediaLibraryService.deleteAllMedia();
+
+      logger.info('All media deleted', { 
+        deleted: result.deleted,
+        failed: result.failed,
+        total: result.total 
+      });
+
+      const response: ApiResponse = {
+        success: true,
+        message: `${result.deleted} média(s) supprimé(s) avec succès${result.failed > 0 ? `, ${result.failed} échec(s)` : ''}`,
+        data: {
+          deleted: result.deleted,
+          failed: result.failed,
+          total: result.total,
+          skipped: result.skipped,
+        },
       };
 
       res.status(200).json(response);
@@ -204,13 +236,42 @@ export class MediaLibraryController {
         throw new ApiError('Fichier requis', 400, ERROR_CODES.VALIDATION_ERROR);
       }
 
-      // Upload new file to Cloudinary
-      const uploadResult = await cloudinaryService.uploadBuffer(req.file.buffer, {
-        folder: 'ebenor-creation/media-library',
-        resource_type: 'auto',
-      });
+      let uploadResult;
+      let newUrl: string;
 
-      const newUrl = uploadResult.secure_url;
+      // Try UploadThing first
+      if (uploadThingService.isConfigured()) {
+        try {
+          uploadResult = await uploadThingService.uploadBuffer(req.file.buffer, {
+            filename: req.file.originalname,
+            contentType: req.file.mimetype,
+            folder: 'media-library',
+            customId: `replace-${Date.now()}`,
+          });
+          newUrl = uploadResult.url;
+
+          logger.info('Media uploaded to UploadThing for replacement', {
+            oldUrl,
+            newUrl,
+            filename: req.file.originalname,
+          });
+        } catch (uploadThingError) {
+          logger.warn('UploadThing upload failed, falling back to Cloudinary', { error: uploadThingError });
+          // Fallback to Cloudinary
+          uploadResult = await cloudinaryService.uploadBuffer(req.file.buffer, {
+            folder: 'ebenor-creation/media-library',
+            resource_type: 'auto',
+          });
+          newUrl = uploadResult.secure_url;
+        }
+      } else {
+        // Use Cloudinary if UploadThing not configured
+        uploadResult = await cloudinaryService.uploadBuffer(req.file.buffer, {
+          folder: 'ebenor-creation/media-library',
+          resource_type: 'auto',
+        });
+        newUrl = uploadResult.secure_url;
+      }
 
       // Replace old URL with new URL across all references
       const result = await mediaLibraryService.replaceMedia(oldUrl, newUrl);
@@ -229,13 +290,18 @@ export class MediaLibraryController {
           newUrl,
           updated: result.updated,
           references: result.references,
-          uploadDetails: {
-            publicId: uploadResult.public_id,
-            format: uploadResult.format,
-            width: uploadResult.width,
-            height: uploadResult.height,
-            bytes: uploadResult.bytes,
-          },
+          uploadDetails: uploadThingService.isConfigured() 
+            ? {
+                key: (uploadResult as any).key,
+                size: (uploadResult as any).size,
+              }
+            : {
+                publicId: (uploadResult as any).public_id,
+                format: (uploadResult as any).format,
+                width: (uploadResult as any).width,
+                height: (uploadResult as any).height,
+                bytes: (uploadResult as any).bytes,
+              },
         },
       };
 

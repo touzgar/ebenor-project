@@ -46,11 +46,14 @@ export class GalleryController {
         
         if (req.query.sort) {
           const sortField = req.query.sort as string;
-          if (sortField === 'date') {
-            sort = { uploadedAt: -1 };
-          } else if (sortField === 'title') {
-            sort = { title: 1 };
-          } else if (sortField === 'featured') {
+          // Handle both "date" and "date:1" or "date:-1" formats
+          if (sortField === 'date' || sortField.startsWith('date:')) {
+            const direction = sortField.includes(':-1') ? 1 : -1;
+            sort = { uploadedAt: direction };
+          } else if (sortField === 'title' || sortField.startsWith('title:')) {
+            const direction = sortField.includes(':-1') ? -1 : 1;
+            sort = { title: direction };
+          } else if (sortField === 'featured' || sortField.startsWith('featured:')) {
             sort = { featured: -1, sortOrder: 1 };
           }
         }
@@ -428,15 +431,109 @@ export class GalleryController {
   // ==================== ADMIN ENDPOINTS ====================
 
   /**
+   * Upload image or video to gallery (Admin only)
+   */
+  public async uploadImage(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      // Handle both single file and files array from upload.any()
+      const file = req.file || (req.files && Array.isArray(req.files) ? req.files[0] : null);
+      
+      if (!file) {
+        throw new ApiError(
+          'Fichier requis',
+          400,
+          ERROR_CODES.VALIDATION_ERROR
+        );
+      }
+
+      // Import file upload service
+      const { fileUploadService } = await import('@/services/fileUploadService');
+
+      // Determine if file is image or video based on mimetype
+      const isVideo = file.mimetype.startsWith('video/');
+      const isImage = file.mimetype.startsWith('image/');
+
+      if (!isImage && !isVideo) {
+        throw new ApiError(
+          'Type de fichier non supporté',
+          400,
+          ERROR_CODES.VALIDATION_ERROR
+        );
+      }
+
+      // Upload file (image or video)
+      const uploadResult = isVideo 
+        ? await fileUploadService.uploadVideo(file, 'gallery')
+        : await fileUploadService.uploadImage(file, 'gallery');
+
+      // Parse tags if they are a string
+      let tags: string[] = [];
+      if (req.body.tags) {
+        try {
+          tags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags;
+        } catch (e) {
+          tags = [];
+        }
+      }
+
+      // Create gallery image record
+      const imageData: any = {
+        title: req.body.title || file.originalname.replace(/\.[^/.]+$/, ''),
+        description: req.body.description || '',
+        alt: req.body.alt || file.originalname.replace(/\.[^/.]+$/, ''),
+        url: uploadResult.secure_url || uploadResult.url,
+        thumbnailUrl: uploadResult.secure_url || uploadResult.url,
+        category: req.body.category || 'Général',
+        tags: tags,
+        featured: req.body.featured === 'true' || false,
+        dimensions: {
+          width: uploadResult.width || 0,
+          height: uploadResult.height || 0,
+        },
+        fileSize: uploadResult.bytes || file.size,
+        mimeType: file.mimetype,
+        cloudinaryId: uploadResult.public_id,
+      };
+
+      // Add uploadedBy if user exists
+      const authenticatedReq = req as any;
+      if (authenticatedReq.user) {
+        imageData.uploadedBy = authenticatedReq.user.id;
+      }
+
+      const image = new GalleryImage(imageData);
+      await image.save();
+
+      logger.info(`Gallery ${isVideo ? 'video' : 'image'} uploaded and created`, { 
+        imageId: image._id, 
+        title: image.title,
+        url: image.url,
+        type: isVideo ? 'video' : 'image',
+      });
+
+      const response: ApiResponse = {
+        success: true,
+        data: image.toPublicJSON(),
+        message: `${isVideo ? 'Vidéo' : 'Image'} téléchargée et ajoutée à la galerie avec succès`,
+      };
+
+      res.status(201).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Créer une nouvelle image de galerie (Admin only)
    */
   public async createGalleryImage(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const imageData = req.body;
+      const imageData: any = req.body;
 
-      // Ajouter l'utilisateur créateur
-      if (req.user) {
-        imageData.uploadedBy = req.user.id;
+      // Add uploadedBy if user exists
+      const authenticatedReq = req as any;
+      if (authenticatedReq.user) {
+        imageData.uploadedBy = authenticatedReq.user.id;
       }
 
       // Créer l'image

@@ -8,7 +8,7 @@ export function WoodCatalog() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
 
   return (
-    <section ref={ref} className="py-24 bg-[#F5F5F5] relative overflow-hidden">
+    <section ref={ref} className="py-0 bg-[#F5F5F5] relative overflow-hidden">
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#C9A14A]/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#C9A14A]/5 rounded-full blur-3xl" />
@@ -19,16 +19,16 @@ export function WoodCatalog() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-2"
         >
           <motion.div
             initial={{ width: 0 }}
             animate={isInView ? { width: "80px" } : {}}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="h-1 bg-gradient-to-r from-transparent via-[#C9A14A] to-transparent mx-auto mb-6"
+            className="h-1 bg-gradient-to-r from-transparent via-[#C9A14A] to-transparent mx-auto mb-2"
           />
           
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0D0D0D] mb-4">
+          <h2 className="text-4xl md:text-5xl font-bold text-[#0D0D0D] mb-2">
             Notre Palette de Bois
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -75,7 +75,7 @@ export function WoodCatalog() {
             transition={{ delay: 0.6, duration: 0.8 }}
             className="absolute -bottom-6 left-1/2 transform -translate-x-1/2"
           >
-            <div className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-3 rounded-full shadow-xl">
+            <div className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-0 rounded-full shadow-xl">
               <p className="font-semibold text-sm tracking-wide">
                 Plus de 50 Essences Disponibles
               </p>
@@ -88,7 +88,7 @@ export function WoodCatalog() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mt-20"
+          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-0"
         >
           {[
             { name: 'Chêne', color: '#8B7355', description: 'Noble et robuste' },
@@ -106,12 +106,12 @@ export function WoodCatalog() {
               <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#C9A14A]/50">
                 {/* Color Sample */}
                 <div 
-                  className="w-full h-24 rounded-lg mb-4 shadow-inner"
+                  className="w-full h-24 rounded-lg mb-2 shadow-inner"
                   style={{ backgroundColor: wood.color }}
                 />
                 
                 {/* Wood Info */}
-                <h3 className="text-lg font-bold text-[#0D0D0D] mb-1">
+                <h3 className="text-lg font-bold text-[#0D0D0D] mb-2">
                   {wood.name}
                 </h3>
                 <p className="text-sm text-gray-600">
@@ -127,9 +127,9 @@ export function WoodCatalog() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="text-center mt-16"
+          className="text-center mt-0"
         >
-          <button className="group relative px-10 py-4 bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black font-semibold rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
+          <button className="group relative px-10 py-0 bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black font-semibold rounded-full overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105">
             <span className="relative z-10">Télécharger le Catalogue Complet</span>
             
             {/* Shine Effect */}

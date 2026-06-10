@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
-import { homeService } from '@/lib/api';
+import { homeService, galleryService } from '@/lib/api';
 import type { HomeContent } from '@/types';
 import { PublishToggle } from '@/components/admin/PublishToggle';
 
@@ -221,12 +221,29 @@ export default function HeroEditorPage() {
       if (imageFile) {
         setIsUploadingImage(true);
         
-        // TODO: Implement image upload to Cloudinary
-        // For now, we'll use a placeholder
-        // In a real implementation, you would upload to Cloudinary here
-        console.warn('Image upload not yet implemented. Using existing image URL.');
-        
-        setIsUploadingImage(false);
+        try {
+          // Create FormData for upload
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          formData.append('title', `Hero Background - ${title}`);
+          formData.append('alt', `Image de fond pour ${title}`);
+          formData.append('category', 'showroom');
+          
+          // Upload to gallery
+          const uploadResponse = await galleryService.uploadImage(formData);
+          
+          if (uploadResponse.success && uploadResponse.data?.url) {
+            finalBackgroundImage = uploadResponse.data.url;
+            console.log('Image uploaded successfully:', finalBackgroundImage);
+          } else {
+            throw new Error('Échec du téléchargement de l\'image');
+          }
+        } catch (uploadError: any) {
+          console.error('Upload error:', uploadError);
+          throw new Error('Erreur lors du téléchargement de l\'image: ' + (uploadError.message || 'Erreur inconnue'));
+        } finally {
+          setIsUploadingImage(false);
+        }
       }
 
       // Prepare payload

@@ -90,40 +90,67 @@ export async function getProducts(
   filters: ProductFilters = {},
   sortBy: string = 'newest'
 ): Promise<ProductsResponse> {
-  const params = new URLSearchParams({
-    page: page.toString(),
-    limit: limit.toString(),
-    sort: sortBy,
-  });
+  try {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+      sort: sortBy,
+    });
 
-  // Add filters to params
-  if (filters.category) params.append('category', filters.category);
-  if (filters.subcategory) params.append('subcategory', filters.subcategory);
-  if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
-  if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
-  if (filters.availability) params.append('availability', filters.availability);
-  if (filters.featured !== undefined) params.append('featured', filters.featured.toString());
-  if (filters.search) params.append('search', filters.search);
-  if (filters.materials && filters.materials.length > 0) {
-    filters.materials.forEach(material => params.append('materials', material));
+    if (filters.category) params.append('category', filters.category);
+    if (filters.subcategory) params.append('subcategory', filters.subcategory);
+    if (filters.minPrice) params.append('minPrice', filters.minPrice.toString());
+    if (filters.maxPrice) params.append('maxPrice', filters.maxPrice.toString());
+    if (filters.availability) params.append('availability', filters.availability);
+    if (filters.featured !== undefined) params.append('featured', filters.featured.toString());
+    
+    if (filters.search && filters.search.trim().length >= 2) {
+      params.append('search', filters.search.trim());
+    }
+    
+    if (filters.materials && filters.materials.length > 0) {
+      filters.materials.forEach(material => params.append('materials', material));
+    }
+    if (filters.tags && filters.tags.length > 0) {
+      filters.tags.forEach(tag => params.append('tags', tag));
+    }
+
+    const url = `${API_BASE_URL}/products?${params.toString()}`;
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      cache: 'no-store',
+    });
+
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      throw new Error(`Server returned non-JSON response`);
+    }
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Failed to fetch products`);
+    }
+
+    const data = await response.json();
+
+    return data;
+  } catch (error) {
+    return {
+      success: false,
+      data: [],
+      pagination: {
+        page: 1,
+        limit: 12,
+        total: 0,
+        pages: 0,
+      },
+    };
   }
-  if (filters.tags && filters.tags.length > 0) {
-    filters.tags.forEach(tag => params.append('tags', tag));
-  }
-
-  const response = await fetch(`${API_BASE_URL}/products?${params.toString()}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    cache: 'no-store', // Disable caching for dynamic data
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch products: ${response.statusText}`);
-  }
-
-  return response.json();
 }
 
 /**

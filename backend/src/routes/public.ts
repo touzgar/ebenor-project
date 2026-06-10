@@ -65,7 +65,7 @@ router.get('/products/search', CacheStrategies.short(), validatePagination, prod
  * @desc    Obtenir les statistiques des produits
  * @access  Public
  */
-router.get('/products/stats', CacheStrategies.short(), productController.getProductStats);
+router.get('/products/stats', CacheStrategies.noCache(), productController.getProductStats);
 
 /**
  * @route   GET /api/products/slug/:slug
@@ -130,7 +130,7 @@ router.get('/gallery/search', CacheStrategies.short(), validatePagination, galle
  * @desc    Obtenir les statistiques de la galerie
  * @access  Public
  */
-router.get('/gallery/stats', CacheStrategies.short(), galleryController.getGalleryStats);
+router.get('/gallery/stats', CacheStrategies.noCache(), galleryController.getGalleryStats);
 
 /**
  * @route   GET /api/gallery/masonry

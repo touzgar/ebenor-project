@@ -13,7 +13,8 @@ export function HeroVideo() {
   // Parallax effect
   const { scrollYProgress } = useScroll({
     target: containerRef,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
+    layoutEffect: false
   });
   
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
@@ -27,15 +28,27 @@ export function HeroVideo() {
   if (loading || !content) {
     return (
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-gray-900">
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        >
+          <source src="/video/hero.mp4" type="video/mp4" />
+        </video>
         <div className="absolute inset-0 bg-black/60" />
         <div className="relative z-10 text-center text-white max-w-4xl mx-auto px-4">
-          <div className="mb-12">
-            <div className="h-16 bg-gray-700 rounded animate-pulse mb-4" />
-            <div className="h-12 bg-gray-700 rounded animate-pulse" />
-          </div>
-          <div className="mb-16">
-            <div className="h-12 w-48 bg-gray-700 rounded-full animate-pulse mx-auto" />
-          </div>
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 tracking-tight">
+            ÉBENOR<span className="text-[#C9A14A]"> CRÉATION</span>
+          </h2>
+          <div className="h-0.5 w-24 bg-amber-500 mx-auto mb-3" />
+          <h1 className="text-2xl md:text-4xl font-serif font-light leading-tight mb-2">
+            L'élégance du bois, l'empreinte de l'art
+          </h1>
+          <button className="px-12 py-3 border-2 border-[#C9A14A] text-white font-semibold text-lg rounded-full mt-2">
+            Demander un devis
+          </button>
         </div>
       </section>
     );
@@ -90,26 +103,16 @@ export function HeroVideo() {
             delay: 0.2,
             ease: "easeOut"
           }}
-          className="mb-12"
+          className="mb-2"
         >
-          {/* Logo Premium */}
-          <div className="inline-flex items-center justify-center w-28 h-28 rounded-full bg-gradient-to-br from-amber-600 to-amber-700 shadow-2xl shadow-amber-600/50 mb-6 relative group p-1">
-            <img
-              src="/logo/logo.jpg"
-              alt="ÉBENOR CRÉATION"
-              className="w-[6.5rem] h-[6.5rem] rounded-full object-cover"
-            />
-            <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </div>
-          
           {/* Nom de l'Usine */}
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-2 tracking-tight"
+            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 tracking-tight"
           >
-            ÉBENOR CRÉATION
+            ÉBENOR<span className="text-[#C9A14A]"> CRÉATION</span>
           </motion.h2>
           
           {/* Ligne décorative */}
@@ -130,9 +133,9 @@ export function HeroVideo() {
             delay: 0.9,
             ease: "easeOut"
           }}
-          className="mb-8"
+          className="mb-2"
         >
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-light leading-tight tracking-wide mb-4">
+          <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-light leading-tight tracking-wide mb-2">
             {content.hero.title}
           </h1>
           <p className="text-base md:text-lg text-gray-200 max-w-2xl mx-auto leading-relaxed">
@@ -149,7 +152,7 @@ export function HeroVideo() {
             delay: 1.2,
             ease: "easeOut"
           }}
-          className="mb-16"
+          className="mb-2"
         >
           <motion.button
             whileHover={{ 
@@ -159,7 +162,7 @@ export function HeroVideo() {
             }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="group relative px-12 py-4 border-2 border-[#C9A14A] text-white font-semibold text-lg rounded-full overflow-hidden backdrop-blur-sm"
+            className="group relative px-12 py-2 border-2 border-[#C9A14A] text-white font-semibold text-lg rounded-full overflow-hidden backdrop-blur-sm"
           >
             {/* Background Gradient on Hover */}
             <motion.div
@@ -198,7 +201,7 @@ export function HeroVideo() {
           }}
           className="flex flex-col items-center text-white/80 hover:text-white transition-colors group"
         >
-          <span className="text-sm mb-3 font-light tracking-[0.2em] uppercase opacity-80 group-hover:opacity-100 transition-opacity">
+          <span className="text-sm mb-2 font-light tracking-[0.2em] uppercase opacity-80 group-hover:opacity-100 transition-opacity">
             Découvrir
           </span>
           
@@ -236,26 +239,22 @@ export function HeroVideo() {
         className="absolute bottom-1/4 left-10 w-24 h-24 border border-white/20 rounded-full"
       />
 
-      {/* Particles Effect (Optional) */}
+      {/* Particles Effect */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
+        {[
+          { left: '15%', top: '20%', duration: 4.5, delay: 0 },
+          { left: '35%', top: '60%', duration: 5.2, delay: 0.4 },
+          { left: '55%', top: '30%', duration: 4.8, delay: 0.8 },
+          { left: '70%', top: '75%', duration: 5.5, delay: 0.2 },
+          { left: '85%', top: '45%', duration: 4.2, delay: 1.0 },
+          { left: '25%', top: '85%', duration: 5.0, delay: 0.6 },
+        ].map((p, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-[#C9A14A] rounded-full"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-            animate={{
-              y: [0, -100, 0],
-              opacity: [0, 1, 0],
-            }}
-            transition={{
-              duration: 4 + Math.random() * 2,
-              repeat: Infinity,
-              delay: Math.random() * 2,
-              ease: "easeInOut"
-            }}
+            style={{ left: p.left, top: p.top }}
+            animate={{ y: [0, -100, 0], opacity: [0, 1, 0] }}
+            transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: "easeInOut" }}
           />
         ))}
       </div>

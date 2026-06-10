@@ -4,12 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { Toaster } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import { productsService } from '@/lib/api';
-import ProductBulkActions from '@/components/admin/ProductBulkActions';
 import { LoadingSpinner, SkeletonTable } from '@/components/ui';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
+import { toast } from '@/lib/toast';
+import { triggerDashboardRefresh } from '@/lib/dashboardRefresh';
 import type { Product } from '@/types';
+import './products-admin.css';
 
 export default function ProductsListPage() {
   const router = useRouter();
@@ -19,6 +23,19 @@ export default function ProductsListPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  
+  // Delete modal state
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    product: Product | null;
+    isDeleting: boolean;
+  }>({
+    isOpen: false,
+    product: null,
+    isDeleting: false,
+  });
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -28,13 +45,36 @@ export default function ProductsListPage() {
 
   // Filters
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [availabilityFilter, setAvailabilityFilter] = useState('');
   const [featuredFilter, setFeaturedFilter] = useState('');
 
-  // Bulk selection
-  const [selectedProducts, setSelectedProducts] = useState<Set<string>>(new Set());
-  const [showBulkActions, setShowBulkActions] = useState(false);
+  // Fix hydration by only rendering on client
+  useEffect(() => {
+    setMounted(true);
+    
+    // Check for success parameter in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const successParam = urlParams.get('success');
+    const productName = urlParams.get('name') || 'Produit';
+    
+    if (successParam === 'created') {
+      const primaryImage = products.find(p => p.name === productName)?.images?.find(img => img.isPrimary);
+      toast.productCreated({
+        name: productName,
+        imageUrl: primaryImage?.url,
+      });
+      window.history.replaceState({}, '', '/admin/products');
+    } else if (successParam === 'updated') {
+      const primaryImage = products.find(p => p.name === productName)?.images?.find(img => img.isPrimary);
+      toast.productUpdated({
+        name: productName,
+        imageUrl: primaryImage?.url,
+      });
+      window.history.replaceState({}, '', '/admin/products');
+    }
+  }, [products]);
 
   // Authentication check
   useEffect(() => {
@@ -45,7 +85,7 @@ export default function ProductsListPage() {
 
   // Fetch products
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated || !mounted) return;
 
     const fetchProducts = async () => {
       try {
@@ -55,9 +95,20 @@ export default function ProductsListPage() {
         const params: Record<string, string> = {
           page: currentPage.toString(),
           limit: itemsPerPage.toString(),
+          _t: Date.now().toString(),
         };
 
-        if (searchQuery) params.search = searchQuery;
+        const trimmedSearch = searchQuery.trim();
+        
+        if (trimmedSearch.length === 1) {
+          setLoading(false);
+          return;
+        }
+        
+        if (trimmedSearch.length >= 2) {
+          params.search = trimmedSearch;
+        }
+        
         if (categoryFilter) params.category = categoryFilter;
         if (availabilityFilter) params.availability = availabilityFilter;
         if (featuredFilter) params.featured = featuredFilter;
@@ -74,7 +125,6 @@ export default function ProductsListPage() {
           }
         }
       } catch (err) {
-        console.error('Error fetching products:', err);
         setError('Erreur lors du chargement des produits');
       } finally {
         setLoading(false);
@@ -82,40 +132,21 @@ export default function ProductsListPage() {
     };
 
     fetchProducts();
-  }, [isAuthenticated, currentPage, searchQuery, categoryFilter, availabilityFilter, featuredFilter]);
+  }, [isAuthenticated, mounted, currentPage, searchQuery, categoryFilter, availabilityFilter, featuredFilter, refreshTrigger]);
 
-  // Bulk selection handlers
-  const handleSelectAll = () => {
-    if (selectedProducts.size === products.length) {
-      setSelectedProducts(new Set());
+  // Handle search with debounce
+  const handleSearchChange = (value: string) => {
+    setSearchInput(value);
+    
+    // Only trigger search if empty (show all) or at least 2 characters
+    const trimmed = value.trim();
+    if (trimmed.length === 0 || trimmed.length >= 2) {
+      setSearchQuery(trimmed);
+      setCurrentPage(1);
     } else {
-      setSelectedProducts(new Set(products.map(p => p._id!)));
+      // If less than 2 chars, clear the search query to show all products
+      setSearchQuery('');
     }
-  };
-
-  const handleSelectProduct = (productId: string) => {
-    const newSelected = new Set(selectedProducts);
-    if (newSelected.has(productId)) {
-      newSelected.delete(productId);
-    } else {
-      newSelected.add(productId);
-    }
-    setSelectedProducts(newSelected);
-  };
-
-  useEffect(() => {
-    setShowBulkActions(selectedProducts.size > 0);
-  }, [selectedProducts]);
-
-  // Handle bulk operations success
-  const handleBulkSuccess = () => {
-    // Refresh products list
-    setCurrentPage(1);
-  };
-
-  // Handle clear selection
-  const handleClearSelection = () => {
-    setSelectedProducts(new Set());
   };
 
   // Format price
@@ -134,12 +165,69 @@ export default function ProductsListPage() {
     return badges[availability as keyof typeof badges] || badges.made_to_order;
   };
 
+  // Handle delete product
+  const handleDeleteClick = (product: Product) => {
+    setDeleteModal({
+      isOpen: true,
+      product,
+      isDeleting: false,
+    });
+  };
+
+  const handleDeleteConfirm = async () => {
+    const { product } = deleteModal;
+    if (!product) return;
+
+    setDeleteModal(prev => ({ ...prev, isDeleting: true }));
+
+    try {
+      const response = await productsService.delete(product._id!);
+      
+      if (response.success) {
+        console.log('✅ Product deleted successfully:', product.name);
+        
+        // Immediately remove from UI
+        setProducts(products.filter(p => p._id !== product._id));
+        setTotalProducts(prev => prev - 1);
+        
+        // Close modal
+        setDeleteModal({ isOpen: false, product: null, isDeleting: false });
+        
+        // Show success toast
+        toast.productDeleted({
+          name: product.name,
+          imageUrl: product.images?.find(img => img.isPrimary)?.url || product.images?.[0]?.url,
+        });
+        
+        // Trigger dashboard refresh - WITH DETAILED LOGGING
+        console.log('🔔 About to trigger dashboard refresh...');
+        triggerDashboardRefresh();
+        console.log('✅ Dashboard refresh triggered successfully');
+        
+        // Refresh from server
+        setRefreshTrigger(prev => prev + 1);
+      } else {
+        throw new Error(response.message || 'Erreur lors de la suppression');
+      }
+    } catch (err: any) {
+      console.error('❌ Error deleting product:', err);
+      toast.error(err.message || 'Erreur lors de la suppression du produit');
+      setDeleteModal({ isOpen: false, product: null, isDeleting: false });
+      setRefreshTrigger(prev => prev + 1);
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, product: null, isDeleting: false });
+  };
+
   // Loading state
-  if (authLoading || (loading && products.length === 0)) {
+  if (authLoading || !mounted || (loading && products.length === 0)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="text-center">
-          <LoadingSpinner size="xl" variant="primary" text="Chargement..." centered />
+          <LoadingSpinner className="mx-auto mb-4" />
+          <p className="text-neutral-600">Chargement...</p>
         </div>
       </div>
     );
@@ -151,6 +239,18 @@ export default function ProductsListPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
+      {/* Sonner Toast Container */}
+      <Toaster position="top-right" richColors closeButton />
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmModal
+        isOpen={deleteModal.isOpen}
+        product={deleteModal.product}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isDeleting={deleteModal.isDeleting}
+      />
+
       {/* Header */}
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -192,12 +292,9 @@ export default function ProductsListPage() {
               <div className="relative">
                 <input
                   type="text"
-                  value={searchQuery}
-                  onChange={(e) => {
-                    setSearchQuery(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  placeholder="Nom, description, tags..."
+                  value={searchInput}
+                  onChange={(e) => handleSearchChange(e.target.value)}
+                  placeholder="Nom, description, tags... (min 2 caractères)"
                   className="w-full pl-10 pr-4 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                 />
                 <svg
@@ -208,6 +305,11 @@ export default function ProductsListPage() {
                 >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
+                {searchInput && searchInput.trim().length > 0 && searchInput.trim().length < 2 && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600">
+                    Min 2 car.
+                  </div>
+                )}
               </div>
             </div>
 
@@ -273,10 +375,11 @@ export default function ProductsListPage() {
             </div>
 
             {/* Clear Filters */}
-            {(searchQuery || categoryFilter || availabilityFilter || featuredFilter) && (
+            {(searchInput || categoryFilter || availabilityFilter || featuredFilter) && (
               <div className="lg:col-span-2 flex items-end">
                 <button
                   onClick={() => {
+                    setSearchInput('');
                     setSearchQuery('');
                     setCategoryFilter('');
                     setAvailabilityFilter('');
@@ -293,22 +396,9 @@ export default function ProductsListPage() {
         </div>
       </div>
 
-      {/* Bulk Actions Bar */}
-      <AnimatePresence>
-        {showBulkActions && (
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-6">
-            <ProductBulkActions
-              selectedProductIds={Array.from(selectedProducts)}
-              onSuccess={handleBulkSuccess}
-              onClear={handleClearSelection}
-            />
-          </div>
-        )}
-      </AnimatePresence>
-
       {/* Products Table */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden products-table">
           {error && (
             <div className="p-4 bg-red-50 border-b border-red-200">
               <p className="text-sm text-red-800">{error}</p>
@@ -328,11 +418,11 @@ export default function ProductsListPage() {
                 Aucun produit trouvé
               </h3>
               <p className="text-neutral-600 mb-4">
-                {searchQuery || categoryFilter || availabilityFilter || featuredFilter
+                {searchInput || categoryFilter || availabilityFilter || featuredFilter
                   ? 'Essayez de modifier vos filtres'
                   : 'Commencez par créer votre premier produit'}
               </p>
-              {!searchQuery && !categoryFilter && !availabilityFilter && !featuredFilter && (
+              {!searchInput && !categoryFilter && !availabilityFilter && !featuredFilter && (
                 <Link
                   href="/admin/products/new"
                   className="inline-flex items-center px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
@@ -350,14 +440,6 @@ export default function ProductsListPage() {
                 <table className="w-full">
                   <thead className="bg-neutral-50 border-b border-neutral-200">
                     <tr>
-                      <th className="px-6 py-3 text-left">
-                        <input
-                          type="checkbox"
-                          checked={selectedProducts.size === products.length && products.length > 0}
-                          onChange={handleSelectAll}
-                          className="w-4 h-4 text-amber-600 border-neutral-300 rounded focus:ring-amber-500"
-                        />
-                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
                         Image
                       </th>
@@ -389,22 +471,23 @@ export default function ProductsListPage() {
                       return (
                         <tr key={product._id} className="hover:bg-neutral-50 transition-colors">
                           <td className="px-6 py-4">
-                            <input
-                              type="checkbox"
-                              checked={selectedProducts.has(product._id!)}
-                              onChange={() => handleSelectProduct(product._id!)}
-                              className="w-4 h-4 text-amber-600 border-neutral-300 rounded focus:ring-amber-500"
-                            />
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-100">
+                            {/* Premium Single Thumbnail - No Carousel */}
+                            <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-neutral-100 ring-2 ring-neutral-200 group">
                               {primaryImage ? (
-                                <Image
-                                  src={primaryImage.url}
-                                  alt={primaryImage.alt}
-                                  fill
-                                  className="object-cover"
-                                />
+                                <>
+                                  <Image
+                                    src={primaryImage.url}
+                                    alt={primaryImage.alt}
+                                    fill
+                                    className="object-cover group-hover:scale-110 transition-transform duration-300"
+                                  />
+                                  {/* Video indicator if it's a video */}
+                                  {product.images && product.images.length > 1 && (
+                                    <div className="absolute top-1 right-1 w-5 h-5 bg-black/60 backdrop-blur-sm rounded-full flex items-center justify-center">
+                                      <span className="text-white text-xs font-bold">+{product.images.length - 1}</span>
+                                    </div>
+                                  )}
+                                </>
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">
                                   <svg className="w-8 h-8 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -447,32 +530,38 @@ export default function ProductsListPage() {
                             )}
                           </td>
                           <td className="px-6 py-4 text-right text-sm font-medium">
-                            <div className="flex items-center justify-end space-x-2">
-                              <Link
-                                href={`/admin/products/${product._id}/edit`}
-                                className="text-amber-600 hover:text-amber-900 transition-colors"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
-                              </Link>
-                              <button
-                                onClick={async () => {
-                                  if (confirm('Êtes-vous sûr de vouloir supprimer ce produit ?')) {
-                                    try {
-                                      await productsService.delete(product._id!);
-                                      setCurrentPage(1);
-                                    } catch (err) {
-                                      alert('Erreur lors de la suppression');
-                                    }
-                                  }
-                                }}
-                                className="text-red-600 hover:text-red-900 transition-colors"
-                              >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                </svg>
-                              </button>
+                            <div className="flex items-center justify-end gap-2">
+                              {/* Premium Edit Button with Tooltip */}
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative group">
+                                <Link
+                                  href={`/admin/products/${product._id}/edit`}
+                                  className="inline-flex items-center justify-center w-9 h-9 bg-amber-50 text-amber-600 rounded-lg hover:bg-amber-100 hover:text-amber-700 transition-all shadow-sm hover:shadow-md"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </Link>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                                  Modifier
+                                </div>
+                              </motion.div>
+
+                              {/* Premium Delete Button with Tooltip */}
+                              <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} className="relative group">
+                                <button
+                                  onClick={() => handleDeleteClick(product)}
+                                  className="inline-flex items-center justify-center w-9 h-9 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 hover:text-red-700 transition-all shadow-sm hover:shadow-md"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
+                                {/* Tooltip */}
+                                <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-neutral-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap">
+                                  Supprimer
+                                </div>
+                              </motion.div>
                             </div>
                           </td>
                         </tr>

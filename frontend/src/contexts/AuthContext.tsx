@@ -25,6 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
   const [state, setState] = useState({
     user: null as User | null,
     isLoading: true,
@@ -32,23 +33,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error: null as string | null,
   });
 
+  // Set mounted on client side only
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const checkAuth = useCallback(async () => {
+    // Skip during SSR
+    if (typeof window === 'undefined') {
+      return;
+    }
+    
     try {
       const token = localStorage.getItem('auth_token');
-      console.log('🔍 [AuthContext] Checking auth, token:', token ? token.substring(0, 20) + '...' : 'none');
       
       if (!token) {
-        console.log('❌ [AuthContext] No token found');
         setState(prev => ({ ...prev, isLoading: false }));
         return;
       }
 
-      console.log('📡 [AuthContext] Fetching profile...');
       const response = await authService.getProfile();
-      console.log('📥 [AuthContext] Profile response:', response);
       
       if (response.success && response.data) {
-        console.log('✅ [AuthContext] Auth check successful, user:', response.data);
         setState({
           user: response.data as User,
           isLoading: false,
@@ -56,34 +62,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           error: null,
         });
       } else {
-        console.log('⚠️ [AuthContext] Token invalid, clearing...');
         localStorage.removeItem('auth_token');
         setState(prev => ({ ...prev, isLoading: false }));
       }
     } catch (error) {
-      console.error('❌ [AuthContext] Auth check error:', error);
-      localStorage.removeItem('auth_token');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('auth_token');
+      }
       setState(prev => ({ ...prev, isLoading: false, error: null }));
     }
   }, []);
 
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth]);
+    if (mounted) {
+      checkAuth();
+    }
+  }, [checkAuth, mounted]);
 
   const login = useCallback(async (email: string, password: string) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
     
     try {
-      console.log('🔐 [AuthContext] Login attempt:', email);
       const response = await authService.login(email, password);
-      console.log('📥 [AuthContext] Login response:', response);
       
       if (response.success && response.data) {
         const { token, user } = response.data as any;
-        
-        console.log('✅ [AuthContext] Login successful, token:', token?.substring(0, 20) + '...');
-        console.log('👤 [AuthContext] User:', user);
         
         // Store token
         apiClient.setAuthToken(token);
@@ -95,7 +98,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           error: null,
         });
         
-        console.log('🚀 [AuthContext] Redirecting to dashboard...');
         // Redirect to dashboard
         router.push('/admin/dashboard');
         
@@ -104,7 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(response.message || 'Login failed');
       }
     } catch (error: any) {
-      console.error('❌ [AuthContext] Login error:', error);
       const errorMessage = error.message || 'Une erreur est survenue lors de la connexion';
       setState(prev => ({
         ...prev,

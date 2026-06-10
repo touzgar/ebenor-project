@@ -40,7 +40,7 @@ const ProductSchema = new Schema<ProductDocument>({
   },
   images: [{
     url: { type: String, required: true },
-    alt: { type: String, required: true, maxlength: 200 },
+    alt: { type: String, default: '', maxlength: 200 },
     isPrimary: { type: Boolean, default: false }
   }],
   specifications: {
@@ -154,41 +154,55 @@ ProductSchema.methods.getPrimaryImage = function() {
 };
 
 // Middleware pre-save
-ProductSchema.pre('save', function(next) {
-  // Générer le slug automatiquement si pas fourni
-  if (!this.slug && this.name) {
-    this.slug = this.name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .trim();
-  }
+ProductSchema.pre('save', async function(next) {
+  try {
+    if (!this.slug && this.name) {
+      let baseSlug = this.name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .trim();
+      
+      let slug = baseSlug;
+      let counter = 1;
+      
+      while (await mongoose.models.Product.findOne({ slug, _id: { $ne: this._id } })) {
+        slug = `${baseSlug}-${counter}`;
+        counter++;
+      }
+      
+      this.slug = slug;
+    }
 
-  // S'assurer qu'une seule image est marquée comme primaire
-  const primaryImages = this.images.filter(img => img.isPrimary);
-  if (primaryImages.length > 1) {
-    this.images.forEach((img, index) => {
-      img.isPrimary = index === 0;
-    });
-  } else if (primaryImages.length === 0 && this.images.length > 0) {
-    this.images[0].isPrimary = true;
-  }
+    const primaryImages = this.images.filter(img => img.isPrimary);
+    if (primaryImages.length > 1) {
+      this.images.forEach((img, index) => {
+        img.isPrimary = index === 0;
+      });
+    } else if (primaryImages.length === 0 && this.images.length > 0) {
+      this.images[0].isPrimary = true;
+    }
 
-  // Générer SEO title et description si pas fournis
-  if (!this.seoTitle) {
-    this.seoTitle = this.name.substring(0, 60);
-  }
-  if (!this.seoDescription) {
-    this.seoDescription = this.shortDescription.substring(0, 160);
-  }
+    if (!this.seoTitle) {
+      this.seoTitle = this.name.substring(0, 60);
+    }
+    if (!this.seoDescription) {
+      this.seoDescription = this.shortDescription.substring(0, 160);
+    }
 
-  next();
+    next();
+  } catch (error: any) {
+    next(error);
+  }
 });
 
 // Middleware post-save pour logging
 ProductSchema.post('save', function(doc) {
-  console.log(`Produit sauvegardé: ${doc.name} (${doc.slug})`);
+  // Product saved silently
 });
 
 export const Product = mongoose.models.Product || mongoose.model<ProductDocument>('Product', ProductSchema);

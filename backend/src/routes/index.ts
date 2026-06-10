@@ -55,6 +55,7 @@ router.get('/', (req, res) => {
       },
       admin: {
         products: {
+          'GET /admin/products': 'Liste des produits (admin)',
           'POST /admin/products': 'Créer un produit',
           'PUT /admin/products/:id': 'Mettre à jour un produit',
           'DELETE /admin/products/:id': 'Supprimer un produit',

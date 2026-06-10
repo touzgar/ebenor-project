@@ -19,7 +19,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { useAuth } from '@/hooks/useAuth';
-import { homeService } from '@/lib/api';
+import { homeService, galleryService } from '@/lib/api';
 import type { HomeContent } from '@/types';
 import { SortableHighlightItem } from '@/components/admin/SortableHighlightItem';
 import { PublishToggle } from '@/components/admin/PublishToggle';
@@ -265,11 +265,29 @@ export default function AboutEditorPage() {
       if (imageFile) {
         setIsUploadingImage(true);
         
-        // TODO: Implement image upload to Cloudinary
-        // For now, we'll use a placeholder
-        console.warn('Image upload not yet implemented. Using existing image URL.');
-        
-        setIsUploadingImage(false);
+        try {
+          // Create FormData for upload
+          const formData = new FormData();
+          formData.append('image', imageFile);
+          formData.append('title', `About Section - ${title}`);
+          formData.append('alt', `Image à propos - ${title}`);
+          formData.append('category', 'showroom');
+          
+          // Upload to gallery
+          const uploadResponse = await galleryService.uploadImage(formData);
+          
+          if (uploadResponse.success && uploadResponse.data?.url) {
+            finalImage = uploadResponse.data.url;
+            console.log('Image uploaded successfully:', finalImage);
+          } else {
+            throw new Error('Échec du téléchargement de l\'image');
+          }
+        } catch (uploadError: any) {
+          console.error('Upload error:', uploadError);
+          throw new Error('Erreur lors du téléchargement de l\'image: ' + (uploadError.message || 'Erreur inconnue'));
+        } finally {
+          setIsUploadingImage(false);
+        }
       }
 
       // Prepare payload

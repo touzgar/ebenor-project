@@ -6,10 +6,18 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useProductForm, useProductTags, useProductMaterials, useProductFinishes } from '@/hooks/useProductForm';
-import { productsService } from '@/lib/api';
-import { Breadcrumb } from '@/components/admin';
+import { productsService, galleryService, categoryService } from '@/lib/api';
+import { Breadcrumb, ProductImageManager } from '@/components/admin';
+import type { ProductImage } from '@/components/admin';
 import { PRODUCT_CATEGORIES } from '@/lib/validations/product';
 import type { ProductFormData } from '@/lib/validations/product';
+
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+}
 
 export default function EditProductPage() {
   const router = useRouter();
@@ -20,6 +28,10 @@ export default function EditProductPage() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isLoadingProduct, setIsLoadingProduct] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  
+  // Categories state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Initialize form
   const {
@@ -51,6 +63,9 @@ export default function EditProductPage() {
   const [materialError, setMaterialError] = useState('');
   const [finishError, setFinishError] = useState('');
   const [tagError, setTagError] = useState('');
+  
+  // State for images
+  const [images, setImages] = useState<ProductImage[]>([]);
 
   // Watch name field for character count
   const nameValue = watch('name') || '';
@@ -69,6 +84,27 @@ export default function EditProductPage() {
       router.push('/admin/login');
     }
   }, [isAuthenticated, authLoading, router]);
+
+  // Fetch categories
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await categoryService.getAll({ isActive: 'true', limit: 100 });
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // Load product data
   useEffect(() => {
@@ -100,6 +136,15 @@ export default function EditProductPage() {
           setValue('tags', product.tags || []);
           setValue('availability', product.availability || 'made_to_order');
           setValue('featured', product.featured || false);
+          
+          // Populate images state for ProductImageManager
+          if (product.images && product.images.length > 0) {
+            setImages(product.images.map(img => ({
+              url: img.url,
+              alt: img.alt || '',
+              isPrimary: img.isPrimary || false,
+            })));
+          }
 
           // Handle optional dimensions
           if (product.dimensions) {
@@ -123,8 +168,6 @@ export default function EditProductPage() {
           throw new Error(response.message || 'Produit non trouvé');
         }
       } catch (error: any) {
-        console.error('Error loading product:', error);
-
         // Provide specific error messages
         let errorMessage = 'Une erreur est survenue lors du chargement du produit';
 
@@ -263,7 +306,46 @@ export default function EditProductPage() {
     setSubmitError(null);
 
     try {
-      // Prepare data for API with proper handling of optional fields
+      // STEP 1: Upload all images that haven't been uploaded yet
+      const uploadedImages = [];
+      
+      for (const image of images) {
+        // If image has a file property, it needs to be uploaded
+        if (image.file) {
+          try {
+            // Create FormData for upload
+            const formData = new FormData();
+            formData.append('image', image.file);
+            formData.append('title', image.alt || image.file.name.replace(/\.[^/.]+$/, ''));
+            formData.append('alt', image.alt || image.file.name.replace(/\.[^/.]+$/, ''));
+            formData.append('category', 'product');
+            
+            // Upload to gallery
+            const uploadResponse = await galleryService.uploadImage(formData);
+            
+            if (uploadResponse.success && uploadResponse.data) {
+              uploadedImages.push({
+                url: uploadResponse.data.url,
+                alt: image.alt || uploadResponse.data.alt,
+                isPrimary: image.isPrimary,
+              });
+            } else {
+              throw new Error(`Échec du téléchargement de l'image: ${image.alt || 'Sans nom'}`);
+            }
+          } catch (uploadError: any) {
+            throw new Error(`Erreur lors du téléchargement de l'image "${image.alt || 'Sans nom'}": ${uploadError.message}`);
+          }
+        } else {
+          // Image already uploaded, use as is
+          uploadedImages.push({
+            url: image.url,
+            alt: image.alt || '',
+            isPrimary: image.isPrimary,
+          });
+        }
+      }
+      
+      // STEP 2: Prepare data for API with proper handling of optional fields
       
       // Convert empty strings to undefined for optional string fields
       const subcategory = data.subcategory?.trim() || undefined;
@@ -291,25 +373,28 @@ export default function EditProductPage() {
         };
       }
       
-      const payload = {
+      // STEP 3: Update product with uploaded images
+      const payload: any = {
         name: data.name.trim(),
-        slug: data.slug.trim(),
         category: data.category,
-        subcategory,
         shortDescription: data.shortDescription.trim(),
         description: data.description.trim(),
-        images: data.images || [],
-        specifications: data.specifications || {},
-        dimensions,
-        materials: data.materials || [],
-        finishes: data.finishes || [],
-        price,
         availability: data.availability || 'made_to_order',
         featured: data.featured || false,
-        seoTitle,
-        seoDescription,
-        tags: data.tags || [],
       };
+      
+      // Only add optional fields if they have valid values
+      if (data.slug?.trim()) payload.slug = data.slug.trim();
+      if (subcategory) payload.subcategory = subcategory;
+      if (uploadedImages.length > 0) payload.images = uploadedImages;
+      if (Object.keys(data.specifications || {}).length > 0) payload.specifications = data.specifications;
+      if (dimensions) payload.dimensions = dimensions;
+      if (data.materials && data.materials.length > 0) payload.materials = data.materials;
+      if (data.finishes && data.finishes.length > 0) payload.finishes = data.finishes;
+      if (price) payload.price = price;
+      if (seoTitle) payload.seoTitle = seoTitle;
+      if (seoDescription) payload.seoDescription = seoDescription;
+      if (data.tags && data.tags.length > 0) payload.tags = data.tags;
 
       const response = await productsService.update(productId, payload);
 
@@ -323,8 +408,6 @@ export default function EditProductPage() {
         throw new Error(response.message || 'Erreur lors de la mise à jour du produit');
       }
     } catch (error: any) {
-      console.error('Error updating product:', error);
-      
       // Provide more detailed error messages
       let errorMessage = 'Une erreur est survenue lors de la mise à jour du produit';
       
@@ -332,6 +415,12 @@ export default function EditProductPage() {
         errorMessage = error.message;
       } else if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
+      }
+      
+      // If there are validation details, show them
+      if (error.response?.data?.details) {
+        const details = error.response.data.details;
+        errorMessage += '\n\nDétails: ' + details.map((d: any) => `${d.field}: ${d.message}`).join(', ');
       }
       
       setSubmitError(errorMessage);
@@ -569,18 +658,37 @@ export default function EditProductPage() {
                   <select
                     id="category"
                     {...register('category')}
+                    disabled={loadingCategories}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                       errors.category ? 'border-red-500' : 'border-neutral-300'
-                    }`}
+                    } ${loadingCategories ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {PRODUCT_CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </option>
-                    ))}
+                    <option value="">Sélectionner une catégorie</option>
+                    {loadingCategories ? (
+                      <option disabled>Chargement des catégories...</option>
+                    ) : categories.length > 0 ? (
+                      categories.map((category) => (
+                        <option key={category._id} value={category.slug}>
+                          {category.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                   {errors.category && (
                     <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+                  )}
+                  {categories.length === 0 && !loadingCategories && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Aucune catégorie disponible. <Link href="/admin/categories" className="underline">Créer des catégories</Link>
+                    </p>
                   )}
                 </div>
 
@@ -677,6 +785,31 @@ export default function EditProductPage() {
                 </p>
               </div>
             </div>
+          </motion.div>
+
+          {/* Product Images Section */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.25 }}
+            className="bg-white rounded-lg shadow-sm border border-neutral-200 p-6"
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              <h2 className="text-xl font-semibold text-neutral-900">
+                Images du produit
+              </h2>
+            </div>
+
+            <ProductImageManager
+              images={images}
+              onChange={setImages}
+              maxImages={10}
+              maxFileSize={10}
+              acceptedFormats={['image/jpeg', 'image/jpg', 'image/png', 'image/webp']}
+            />
           </motion.div>
 
           {/* Specifications Section */}

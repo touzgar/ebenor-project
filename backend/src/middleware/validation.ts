@@ -157,19 +157,19 @@ export const validateProduct = [
     .withMessage('Sous-catégorie trop longue'),
   
   body('images')
-    .isArray({ min: 1 })
-    .withMessage('Au moins une image est requise'),
+    .optional()
+    .isArray()
+    .withMessage('Les images doivent être un tableau'),
   
   body('images.*.url')
     .isURL({ protocols: ['http', 'https'], require_protocol: true })
     .withMessage('URL d\'image invalide'),
   
   body('images.*.alt')
+    .optional()
     .trim()
-    .notEmpty()
-    .withMessage('Le texte alternatif est requis')
-    .isLength({ min: 2, max: 200 })
-    .withMessage('Le texte alternatif doit contenir entre 2 et 200 caractères'),
+    .isLength({ max: 200 })
+    .withMessage('Le texte alternatif ne peut pas dépasser 200 caractères'),
   
   body('images.*.isPrimary')
     .optional()
@@ -506,7 +506,16 @@ export const validatePagination = [
   
   query('sort')
     .optional()
-    .isIn(['createdAt', '-createdAt', 'name', '-name', 'price', '-price', 'featured', '-featured'])
+    .isIn([
+      'createdAt', '-createdAt',
+      'name', '-name',
+      'price', '-price',
+      'featured', '-featured',
+      // Gallery-specific sorts accepted by galleryController
+      'date', 'date:1', 'date:-1',
+      'title', 'title:1', 'title:-1',
+      'uploadedAt', '-uploadedAt'
+    ])
     .withMessage('Critère de tri invalide'),
   
   handleValidationErrors

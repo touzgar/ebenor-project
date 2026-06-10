@@ -168,23 +168,26 @@ export default function GalleryUploadPage() {
         );
       }, 200);
 
-      // Upload to API
-      const response = await galleryService.uploadImage(formData);
+      try {
+        // Upload to API
+        const response = await galleryService.uploadImage(formData);
 
-      clearInterval(progressInterval);
-
-      if (response.success) {
-        // Update status to success
-        setUploadQueue((prev) =>
-          prev.map((f) =>
-            f.id === uploadFile.id
-              ? { ...f, status: 'success' as const, progress: 100 }
-              : f
-          )
-        );
-        return true;
-      } else {
-        throw new Error('Upload failed');
+        if (response.success) {
+          // Update status to success
+          setUploadQueue((prev) =>
+            prev.map((f) =>
+              f.id === uploadFile.id
+                ? { ...f, status: 'success' as const, progress: 100 }
+                : f
+            )
+          );
+          return true;
+        } else {
+          throw new Error('Upload failed');
+        }
+      } finally {
+        // Always clear interval
+        clearInterval(progressInterval);
       }
     } catch (error) {
       console.error('Upload error:', error);

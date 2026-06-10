@@ -424,7 +424,7 @@ export class MediaLibraryService {
   }
 
   /**
-   * Delete media and update all references
+   * Delete media from database and cloud storage
    */
   public async deleteMedia(url: string): Promise<{ deleted: boolean; references: MediaReference[] }> {
     try {
@@ -439,12 +439,30 @@ export class MediaLibraryService {
         };
       }
 
-      // Extract public ID from Cloudinary URL
+      // Delete from database collections
+      // 1. Delete from GalleryImage
+      const galleryResult = await GalleryImage.deleteMany({ url });
+      if (galleryResult.deletedCount > 0) {
+        logger.info('Deleted from GalleryImage collection', { url, count: galleryResult.deletedCount });
+      }
+
+      // 2. Delete from Products (remove image from images array)
+      const products = await Product.find({ 'images.url': url });
+      for (const product of products) {
+        product.images = product.images.filter(img => img.url !== url);
+        await product.save();
+        logger.info('Removed image from Product', { productId: product._id, url });
+      }
+
+      // 3. Extract public ID from Cloudinary URL and delete from cloud
       const publicId = this.extractPublicId(url);
       if (publicId) {
-        // Delete from Cloudinary
-        await cloudinaryService.deleteFile(publicId);
-        logger.info('Media deleted from Cloudinary', { url, publicId });
+        try {
+          await cloudinaryService.deleteFile(publicId);
+          logger.info('Media deleted from Cloudinary', { url, publicId });
+        } catch (cloudError) {
+          logger.warn('Failed to delete from Cloudinary (may not exist)', { url, error: cloudError });
+        }
       }
 
       return {
@@ -453,6 +471,108 @@ export class MediaLibraryService {
       };
     } catch (error) {
       logger.error('Error deleting media', { error, url });
+      throw error;
+    }
+  }
+
+  /**
+   * Delete all media from database and cloud storage
+   */
+  public async deleteAllMedia(): Promise<{ deleted: number; failed: number; total: number; skipped: number }> {
+    try {
+      let deletedCount = 0;
+      let failedCount = 0;
+      let skippedCount = 0;
+      let totalCount = 0;
+
+      // Get all media
+      const { media } = await this.getAllMedia(1, 10000, {}); // Get all media (with high limit)
+      totalCount = media.length;
+
+      logger.info(`Starting to delete ${totalCount} media items`);
+
+      // Delete each media item
+      for (const mediaItem of media) {
+        try {
+          // Check if media has references
+          const references = await this.findMediaReferences(mediaItem.url);
+          
+          if (references.length > 0) {
+            // Skip media that is in use
+            skippedCount++;
+            logger.info('Skipping media deletion (in use)', { 
+              url: mediaItem.url, 
+              references: references.length 
+            });
+            continue;
+          }
+
+          // Delete from database based on source
+          if (mediaItem.source === 'gallery') {
+            // Delete from GalleryImage collection
+            const result = await GalleryImage.findByIdAndDelete(mediaItem.sourceId);
+            if (result) {
+              logger.info('Deleted GalleryImage from database', { 
+                id: mediaItem.sourceId,
+                url: mediaItem.url 
+              });
+            }
+          } else if (mediaItem.source === 'product') {
+            // Remove image from Product's images array
+            const product = await Product.findById(mediaItem.sourceId);
+            if (product) {
+              product.images = product.images.filter(img => img.url !== mediaItem.url);
+              await product.save();
+              logger.info('Removed image from Product', { 
+                productId: mediaItem.sourceId,
+                url: mediaItem.url 
+              });
+            }
+          }
+
+          // Delete from Cloudinary
+          const publicId = this.extractPublicId(mediaItem.url);
+          if (publicId) {
+            try {
+              await cloudinaryService.deleteFile(publicId);
+              logger.info('Media deleted from Cloudinary', { 
+                url: mediaItem.url, 
+                publicId 
+              });
+            } catch (deleteError) {
+              logger.warn('Failed to delete from Cloudinary (may not exist)', { 
+                error: deleteError, 
+                url: mediaItem.url,
+                publicId 
+              });
+            }
+          }
+
+          deletedCount++;
+        } catch (error) {
+          failedCount++;
+          logger.error('Error processing media deletion', { 
+            error, 
+            url: mediaItem.url 
+          });
+        }
+      }
+
+      logger.info('Completed media deletion', { 
+        total: totalCount,
+        deleted: deletedCount,
+        failed: failedCount,
+        skipped: skippedCount 
+      });
+
+      return {
+        deleted: deletedCount,
+        failed: failedCount,
+        total: totalCount,
+        skipped: skippedCount,
+      };
+    } catch (error) {
+      logger.error('Error deleting all media', { error });
       throw error;
     }
   }

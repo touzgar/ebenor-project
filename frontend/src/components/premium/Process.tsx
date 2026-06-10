@@ -41,32 +41,10 @@ export function Process() {
     }
   };
 
-  if (loading || !content) {
-    return (
-      <section className="py-24 bg-[#0D0D0D] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-20">
-            <div className="h-8 bg-gray-700 rounded animate-pulse mb-4" />
-            <div className="h-16 bg-gray-700 rounded animate-pulse mb-6" />
-            <div className="h-12 bg-gray-700 rounded animate-pulse max-w-2xl mx-auto" />
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="text-center">
-                <div className="w-16 h-16 bg-gray-700 rounded-full mx-auto mb-6 animate-pulse" />
-                <div className="w-20 h-20 bg-gray-700 rounded-2xl mx-auto mb-6 animate-pulse" />
-                <div className="h-8 bg-gray-700 rounded animate-pulse mb-4" />
-                <div className="h-16 bg-gray-700 rounded animate-pulse" />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (loading || !content) return null;
 
   return (
-    <section className="py-24 bg-[#0D0D0D] text-white relative overflow-hidden" ref={ref}>
+    <section className="py-0 bg-[#0D0D0D] text-white relative overflow-hidden" ref={ref}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -80,12 +58,12 @@ export function Process() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-20"
+          className="text-center mb-2"
         >
           <span className="text-[#C9A14A] font-semibold tracking-wider uppercase text-sm">
             Notre Processus
           </span>
-          <h2 className="text-4xl md:text-5xl font-serif mt-4 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-serif mt-0 mb-2 leading-tight">
             De l'idée à la <span className="text-[#C9A14A]">réalisation</span>
           </h2>
           <p className="text-lg text-gray-300 max-w-2xl mx-auto leading-relaxed">
@@ -99,7 +77,7 @@ export function Process() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {content.process.map((step: any, index: number) => {
             const IconComponent = iconMap[step.step as keyof typeof iconMap] || HiCog;
@@ -120,7 +98,7 @@ export function Process() {
                     initial={{ scale: 0 }}
                     animate={isInView ? { scale: 1 } : {}}
                     transition={{ delay: index * 0.2 + 0.5, duration: 0.5 }}
-                    className="w-16 h-16 bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] rounded-full flex items-center justify-center mx-auto mb-6 text-black font-bold text-xl"
+                    className="w-16 h-16 bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] rounded-full flex items-center justify-center mx-auto mb-2 text-black font-bold text-xl"
                   >
                     {step.step}
                   </motion.div>
@@ -130,7 +108,7 @@ export function Process() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
                     transition={{ delay: index * 0.2 + 0.6, duration: 0.5 }}
-                    className="mb-6"
+                    className="mb-2"
                   >
                     <div className="w-20 h-20 bg-white/5 rounded-2xl flex items-center justify-center mx-auto group-hover:bg-[#C9A14A]/20 transition-colors duration-300">
                       <IconComponent className="w-10 h-10 text-[#C9A14A]" />
@@ -143,10 +121,10 @@ export function Process() {
                     animate={isInView ? { opacity: 1, y: 0 } : {}}
                     transition={{ delay: index * 0.2 + 0.7, duration: 0.5 }}
                   >
-                    <h3 className="text-2xl font-serif mb-4 group-hover:text-[#C9A14A] transition-colors">
+                    <h3 className="text-2xl font-serif mb-2 group-hover:text-[#C9A14A] transition-colors">
                       {step.title}
                     </h3>
-                    <p className="text-gray-300 mb-6 leading-relaxed">
+                    <p className="text-gray-300 mb-2 leading-relaxed">
                       {step.description}
                     </p>
                   </motion.div>
@@ -161,13 +139,13 @@ export function Process() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 1.2, duration: 0.6 }}
-          className="text-center mt-20"
+          className="text-center mt-0"
         >
-          <p className="text-lg text-gray-300 mb-8 max-w-2xl mx-auto">
+          <p className="text-lg text-gray-300 mb-2 max-w-2xl mx-auto">
             Prêt à commencer votre projet ? Contactez-nous pour une consultation gratuite 
             et découvrez comment nous pouvons transformer vos espaces.
           </p>
-          <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300 transform hover:scale-105">
+          <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-0 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300 transform hover:scale-105">
             Commencer mon projet
           </button>
         </motion.div>

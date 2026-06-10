@@ -46,39 +46,22 @@ export function Products() {
     icon: product.category
   }));
 
-  if (homeLoading && productsLoading) {
-    return (
-      <section className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
-            <div className="h-16 bg-gray-200 rounded animate-pulse mb-6" />
-            <div className="h-12 bg-gray-200 rounded animate-pulse max-w-2xl mx-auto" />
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-80 bg-gray-200 rounded-2xl animate-pulse" />
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (homeLoading && productsLoading) return null;
 
   return (
-    <section className="py-24 bg-white" ref={ref}>
+    <section className="py-0 bg-white" ref={ref}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16"
+          className="text-center mb-2"
         >
           <span className="text-[#C9A14A] font-semibold tracking-wider uppercase text-sm">
             Nos Créations
           </span>
-          <h2 className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-4 mb-6 leading-tight">
+          <h2 className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-0 mb-2 leading-tight">
             Excellence & <span className="text-[#C9A14A]">Savoir-faire</span>
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -92,7 +75,7 @@ export function Products() {
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? "visible" : "hidden"}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-8"
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-4"
         >
           {displayItems.slice(0, 4).map((item: any, index: number) => (
             <motion.div
@@ -125,10 +108,10 @@ export function Products() {
                     <span className="text-[#C9A14A] text-sm font-semibold tracking-wider uppercase">
                       {item.category || 'Création'}
                     </span>
-                    <h3 className="text-xl font-serif mt-2 mb-2 group-hover:text-[#C9A14A] transition-colors">
+                    <h3 className="text-xl font-serif mt-0 mb-2 group-hover:text-[#C9A14A] transition-colors">
                       {item.title}
                     </h3>
-                    <p className="text-sm text-gray-300 mb-4 leading-relaxed">
+                    <p className="text-sm text-gray-300 mb-2 leading-relaxed">
                       {item.description}
                     </p>
                     
@@ -151,9 +134,9 @@ export function Products() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ delay: 0.8, duration: 0.6 }}
-          className="text-center mt-16"
+          className="text-center mt-0"
         >
-          <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300 transform hover:scale-105">
+          <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-0 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300 transform hover:scale-105">
             Voir tous nos produits
           </button>
         </motion.div>

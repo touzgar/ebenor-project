@@ -26,7 +26,7 @@ const GalleryImageSchema = new Schema<GalleryImageDocument>({
   category: { 
     type: String, 
     required: true,
-    enum: ['cuisine', 'dressing', 'mobilier', 'amenagement', 'showroom', 'process', 'autre'],
+    enum: ['cuisine', 'dressing', 'mobilier', 'amenagement', 'showroom', 'process', 'product', 'autre'],
     lowercase: true
   },
   tags: [{ 

@@ -70,42 +70,23 @@ export function Gallery() {
     return heights[index % heights.length];
   };
 
-  if (loading) {
-    return (
-      <section className="py-24 bg-[#F5F5F5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <div className="h-8 bg-gray-200 rounded animate-pulse mb-4" />
-            <div className="h-16 bg-gray-200 rounded animate-pulse mb-6" />
-            <div className="h-12 bg-gray-200 rounded animate-pulse max-w-2xl mx-auto" />
-          </div>
-          <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="break-inside-avoid">
-                <div className={`bg-gray-200 rounded-2xl animate-pulse ${getImageHeight({}, i)}`} />
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (loading && images.length === 0) return null;
 
   return (
     <>
-      <section className="py-24 bg-[#F5F5F5]" ref={ref}>
+      <section className="py-0 bg-[#F5F5F5]" ref={ref}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="text-center mb-16"
+            className="text-center mb-2"
           >
             <span className="text-[#C9A14A] font-semibold tracking-wider uppercase text-sm">
               Galerie
             </span>
-            <h2 className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-4 mb-6 leading-tight">
+            <h2 className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-0 mb-2 leading-tight">
               Nos <span className="text-[#C9A14A]">Réalisations</span>
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto leading-relaxed">
@@ -119,7 +100,7 @@ export function Gallery() {
             variants={containerVariants}
             initial="hidden"
             animate={isInView ? "visible" : "hidden"}
-            className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6"
+            className="columns-1 md:columns-2 lg:columns-3 gap-4 space-y-2"
           >
             {images.map((image, index) => (
               <motion.div
@@ -167,9 +148,9 @@ export function Gallery() {
             initial={{ opacity: 0, y: 30 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 1, duration: 0.6 }}
-            className="text-center mt-16"
+            className="text-center mt-0"
           >
-            <button className="bg-[#0D0D0D] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#C9A14A] hover:text-black transition-all duration-300 transform hover:scale-105">
+            <button className="bg-[#0D0D0D] text-white px-8 py-0 rounded-full font-semibold hover:bg-[#C9A14A] hover:text-black transition-all duration-300 transform hover:scale-105">
               Voir toute la galerie
             </button>
           </motion.div>
@@ -226,7 +207,7 @@ export function Gallery() {
               <span className="text-[#C9A14A] text-sm font-semibold tracking-wider uppercase">
                 {images[selectedImage].category}
               </span>
-              <p className="text-lg font-serif mt-1">
+              <p className="text-lg font-serif mt-0">
                 {images[selectedImage].title}
               </p>
             </div>

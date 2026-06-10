@@ -14,7 +14,7 @@ class DatabaseConfig {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
-        bufferCommands: false,
+        bufferCommands: true, // Changed to true to allow buffering when connection is retrying
       };
 
       await mongoose.connect(this.mongoUri, options);
@@ -36,13 +36,14 @@ class DatabaseConfig {
 
     } catch (error) {
       logger.error('❌ Erreur de connexion à MongoDB:', error);
-      logger.warn('⚠️ Le serveur continuera sans base de données (mode développement)');
-      // En mode développement, on continue sans MongoDB
-      if (process.env.NODE_ENV !== 'production') {
-        logger.info('💡 Pour installer MongoDB localement: https://www.mongodb.com/try/download/community');
-        return;
-      }
-      throw error;
+      logger.error('🚨 MongoDB est REQUIS pour que l\'application fonctionne');
+      logger.info('');
+      logger.info('📋 SOLUTIONS POSSIBLES:');
+      logger.info('1️⃣  Utiliser Docker (RECOMMANDÉ): docker-compose up -d');
+      logger.info('2️⃣  Installer MongoDB: https://www.mongodb.com/try/download/community');
+      logger.info('3️⃣  Utiliser MongoDB Atlas (gratuit): https://www.mongodb.com/cloud/atlas');
+      logger.info('');
+      throw error; // Always throw error - MongoDB is required
     }
   }
 

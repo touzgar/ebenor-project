@@ -2,12 +2,44 @@
 
 import { motion } from 'framer-motion';
 import { HiArrowDown } from 'react-icons/hi';
+import Link from 'next/link';
+import { useHomeContent } from '@/hooks/useHomeContent';
+import { useEffect, useState } from 'react';
 
 export function Hero() {
+  const { content, loading } = useHomeContent();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const scrollToNext = () => {
     const nextSection = document.getElementById('about');
     nextSection?.scrollIntoView({ behavior: 'smooth' });
   };
+
+  if (!mounted || loading || !content) {
+    return (
+      <section className="relative h-screen flex items-center justify-center overflow-hidden bg-neutral-900">
+        <div className="absolute inset-0 z-0">
+          <div
+            className="w-full h-full bg-cover bg-center bg-fixed"
+            style={{
+              backgroundImage: `url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70" />
+        </div>
+        <div className="relative z-10 text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-white">Chargement...</p>
+        </div>
+      </section>
+    );
+  }
+
+  const { hero } = content;
 
   return (
     <section className="relative h-screen flex items-center justify-center overflow-hidden">
@@ -21,7 +53,7 @@ export function Hero() {
         <div
           className="w-full h-full bg-cover bg-center bg-fixed"
           style={{
-            backgroundImage: `url('https://images.unsplash.com/photo-1586023492125-27b2c045efd7?ixlib=rb-4.0.3&auto=format&fit=crop&w=2000&q=80')`
+            backgroundImage: `url('${hero.backgroundImage}')`
           }}
         />
         {/* Dark Overlay */}
@@ -40,11 +72,8 @@ export function Hero() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.5 }}
             className="text-5xl md:text-7xl lg:text-8xl font-serif font-light mb-6 leading-tight"
-          >
-            L'élégance du bois,
-            <br />
-            <span className="text-[#C9A14A] font-normal">l'empreinte de l'art</span>
-          </motion.h1>
+            dangerouslySetInnerHTML={{ __html: hero.title.replace(/,\s*/g, ',<br />') }}
+          />
         </motion.div>
 
         <motion.p
@@ -53,8 +82,7 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.7 }}
           className="text-xl md:text-2xl mb-12 text-gray-200 font-light max-w-2xl mx-auto leading-relaxed"
         >
-          Créateur d'espaces d'exception en Tunisie, nous transformons vos rêves en réalité 
-          avec un savoir-faire artisanal unique et des matériaux nobles.
+          {hero.subtitle}
         </motion.p>
 
         <motion.div
@@ -63,21 +91,25 @@ export function Hero() {
           transition={{ duration: 0.8, delay: 0.9 }}
           className="flex flex-col sm:flex-row gap-6 justify-center items-center"
         >
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300"
-          >
-            Demander un devis gratuit
-          </motion.button>
+          <Link href={hero.ctaLink}>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-4 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/30 transition-all duration-300"
+            >
+              {hero.ctaText}
+            </motion.button>
+          </Link>
           
-          <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-black transition-all duration-300"
-          >
-            Découvrir nos créations
-          </motion.button>
+          <Link href="/produits">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold text-lg hover:bg-white hover:text-black transition-all duration-300"
+            >
+              Découvrir nos créations
+            </motion.button>
+          </Link>
         </motion.div>
       </div>
 

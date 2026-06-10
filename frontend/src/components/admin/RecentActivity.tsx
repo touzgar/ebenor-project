@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 
 interface Activity {
   id: string;
@@ -42,48 +43,48 @@ const activityColors = {
 };
 
 export function RecentActivity() {
-  const activities: Activity[] = [
-    {
-      id: '1',
-      type: 'product',
-      action: 'Nouveau produit ajouté',
-      description: 'Table en chêne massif - Collection Premium',
-      time: 'Il y a 2 heures',
-      user: 'Admin',
-    },
-    {
-      id: '2',
-      type: 'gallery',
-      action: 'Images ajoutées',
-      description: '5 nouvelles images dans la galerie',
-      time: 'Il y a 4 heures',
-      user: 'Admin',
-    },
-    {
-      id: '3',
-      type: 'message',
-      action: 'Nouveau message',
-      description: 'Demande de devis pour un projet personnalisé',
-      time: 'Il y a 6 heures',
-      user: 'Client',
-    },
-    {
-      id: '4',
-      type: 'content',
-      action: 'Contenu mis à jour',
-      description: 'Section "À propos" modifiée',
-      time: 'Hier',
-      user: 'Admin',
-    },
-    {
-      id: '5',
-      type: 'product',
-      action: 'Produit modifié',
-      description: 'Chaise design - Prix mis à jour',
-      time: 'Hier',
-      user: 'Admin',
-    },
-  ];
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchActivities = async () => {
+      try {
+        const response = await fetch('/api/admin/audit-logs?limit=5');
+        if (response.ok) {
+          const data = await response.json();
+          const formattedActivities: Activity[] = data.data?.map((log: any) => {
+            const timestamp = new Date(log.timestamp);
+            const now = new Date();
+            const diffMs = now.getTime() - timestamp.getTime();
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMins / 60);
+            const diffDays = Math.floor(diffHours / 24);
+
+            let timeStr = 'À l\'instant';
+            if (diffMins >= 1 && diffMins < 60) timeStr = `Il y a ${diffMins}m`;
+            else if (diffHours >= 1 && diffHours < 24) timeStr = `Il y a ${diffHours}h`;
+            else if (diffDays >= 1) timeStr = `Il y a ${diffDays}j`;
+
+            return {
+              id: log._id,
+              type: log.resource as 'product' | 'gallery' | 'message' | 'content',
+              action: log.action,
+              description: log.details?.name || log.details?.message || 'Modification effectuée',
+              time: timeStr,
+              user: log.user || 'Admin',
+            };
+          }) || [];
+          setActivities(formattedActivities);
+        }
+      } catch (error) {
+        console.error('Failed to fetch activities:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActivities();
+  }, []);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">
@@ -95,34 +96,56 @@ export function RecentActivity() {
       </div>
 
       <div className="space-y-4">
-        {activities.map((activity, index) => (
-          <motion.div
-            key={activity.id}
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: index * 0.1 }}
-            className="flex items-start space-x-4 p-3 rounded-lg hover:bg-neutral-50 transition-colors"
-          >
-            <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${activityColors[activity.type]}`}>
-              {activityIcons[activity.type]}
-            </div>
-            
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-neutral-900">
-                {activity.action}
-              </p>
-              <p className="text-sm text-neutral-600 truncate">
-                {activity.description}
-              </p>
-              <div className="flex items-center mt-1 text-xs text-neutral-500">
-                <span>{activity.time}</span>
-                <span className="mx-2">•</span>
-                <span>{activity.user}</span>
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="flex items-start space-x-4 animate-pulse">
+                <div className="w-10 h-10 rounded-lg bg-neutral-200" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-neutral-200 rounded w-1/2" />
+                  <div className="h-3 bg-neutral-200 rounded w-3/4" />
+                </div>
               </div>
-            </div>
-          </motion.div>
-        ))}
+            ))}
+          </div>
+        ) : activities.length === 0 ? (
+          <div className="text-center py-8 text-neutral-500">
+            <svg className="w-12 h-12 mx-auto mb-3 text-neutral-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p>Aucune activité récente</p>
+          </div>
+        ) : (
+          activities.map((activity, index) => (
+            <motion.div
+              key={activity.id}
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: index * 0.1 }}
+              className="flex items-start space-x-4 p-3 rounded-lg hover:bg-neutral-50 transition-colors"
+            >
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${activityColors[activity.type]}`}>
+                {activityIcons[activity.type]}
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-neutral-900">
+                  {activity.action}
+                </p>
+                <p className="text-sm text-neutral-600 truncate">
+                  {activity.description}
+                </p>
+                <div className="flex items-center mt-1 text-xs text-neutral-500">
+                  <span>{activity.time}</span>
+                  <span className="mx-2">•</span>
+                  <span>{activity.user}</span>
+                </div>
+              </div>
+            </motion.div>
+          ))
+        )}
       </div>
     </div>
   );
 }
+

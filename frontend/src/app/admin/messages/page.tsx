@@ -42,23 +42,12 @@ export default function MessagesPage() {
       setIsLoading(true);
       setError(null);
       
-      console.log('=== loadMessages DEBUG ===');
-      console.log('Filters:', filters);
-      console.log('Page:', currentPage);
-      console.log('Limit:', limit);
-      
       const response = await messagesService.getMessages(filters, currentPage, limit);
-      
-      console.log('Response from messagesService:', response);
-      console.log('Response.success:', response.success);
-      console.log('Response.data:', response.data);
-      console.log('Response.data length:', response.data?.length);
       
       if (response.success) {
         setMessages(response.data);
         setTotalPages(response.pagination.pages);
         setTotal(response.pagination.total);
-        console.log('Messages set to state:', response.data);
       }
     } catch (err: any) {
       console.error('Error loading messages:', err);
@@ -89,28 +78,6 @@ export default function MessagesPage() {
     return Object.keys(filters).filter(key => filters[key as keyof MessageFilters]).length;
   };
 
-  // DEBUG: Bouton pour tester l'API directement
-  const testAPI = async () => {
-    try {
-      const token = localStorage.getItem('auth_token');
-      const response = await fetch('http://localhost:5000/api/admin/messages?page=1&limit=20', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      const data = await response.json();
-      console.log('=== API TEST ===');
-      console.log('Success:', data.success);
-      console.log('Data length:', data.data?.length);
-      console.log('Messages:', data.data);
-      console.log('Pagination:', data.pagination);
-      alert(`API retourne ${data.data?.length || 0} message(s). Voir console pour détails.`);
-    } catch (err) {
-      console.error('Erreur API:', err);
-      alert('Erreur lors du test API. Voir console.');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -120,13 +87,6 @@ export default function MessagesPage() {
           <p className="mt-2 text-sm text-gray-600">
             Gérez les messages reçus depuis le formulaire de contact
           </p>
-          {/* DEBUG BUTTON */}
-          <button
-            onClick={testAPI}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            🔍 Tester l'API (Debug)
-          </button>
         </div>
 
         {/* Filters */}

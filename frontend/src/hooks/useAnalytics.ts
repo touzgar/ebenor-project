@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { onDashboardRefresh } from '@/lib/dashboardRefresh';
+import { useDashboardRefresh } from '@/contexts/DashboardContext';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
 
@@ -70,16 +72,20 @@ export function useProductStats() {
   const [stats, setStats] = useState<ProductStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { refreshKey } = useDashboardRefresh();
 
+  // Fetch on mount and when refreshKey changes
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        console.log('🔄 Fetching product stats (refreshKey:', refreshKey, ')');
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/stats`, {
+        const response = await fetch(`${API_BASE_URL}/products/stats?_t=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         });
 
         if (!response.ok) {
@@ -87,7 +93,9 @@ export function useProductStats() {
         }
 
         const data = await response.json();
+        console.log('📊 Product stats updated:', data.data);
         setStats(data.data);
+        setError(null);
       } catch (err) {
         setError(err as Error);
         console.error('Error fetching product stats:', err);
@@ -97,7 +105,7 @@ export function useProductStats() {
     };
 
     fetchStats();
-  }, []);
+  }, [refreshKey]); // Only depend on refreshKey
 
   return { stats, loading, error };
 }
@@ -109,16 +117,20 @@ export function useGalleryStats() {
   const [stats, setStats] = useState<GalleryStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { refreshKey } = useDashboardRefresh();
 
+  // Fetch on mount and when refreshKey changes
   useEffect(() => {
     const fetchStats = async () => {
       try {
+        console.log('🔄 Fetching gallery stats (refreshKey:', refreshKey, ')');
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/gallery/stats`, {
+        const response = await fetch(`${API_BASE_URL}/gallery/stats?_t=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         });
 
         if (!response.ok) {
@@ -126,7 +138,9 @@ export function useGalleryStats() {
         }
 
         const data = await response.json();
+        console.log('📊 Gallery stats updated:', data.data);
         setStats(data.data);
+        setError(null);
       } catch (err) {
         setError(err as Error);
         console.error('Error fetching gallery stats:', err);
@@ -136,7 +150,7 @@ export function useGalleryStats() {
     };
 
     fetchStats();
-  }, []);
+  }, [refreshKey]); // Only depend on refreshKey
 
   return { stats, loading, error };
 }
@@ -148,37 +162,42 @@ export function useMediaStats() {
   const [stats, setStats] = useState<MediaStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { refreshKey } = useDashboardRefresh();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        setLoading(true);
-        const token = localStorage.getItem('token');
+        // Import mediaService from api.ts for consistent auth/CSRF handling
+        const { mediaService } = await import('@/lib/api');
         
-        const response = await fetch(`${API_BASE_URL}/admin/media/stats`, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
+        setLoading(true);
+        console.log('🔄 Fetching media stats (refreshKey:', refreshKey, ')');
+        
+        const response = await mediaService.getStats();
+        
+        if (response.success && response.data) {
+          console.log('📊 Media stats updated:', response.data);
+          setStats(response.data);
+          setError(null);
+        } else {
           throw new Error('Failed to fetch media stats');
         }
-
-        const data = await response.json();
-        setStats(data.data);
-      } catch (err) {
-        setError(err as Error);
-        console.error('Error fetching media stats:', err);
+      } catch (err: any) {
+        // Handle auth errors gracefully
+        if (err.response?.status === 401) {
+          console.log('⚠️ Media stats: Unauthorized (401) - token may be invalid or expired');
+          setError(null); // Clear error for auth issues (user not logged in)
+        } else {
+          setError(err as Error);
+          console.error('Error fetching media stats:', err);
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [refreshKey]); // Re-fetch when refreshKey changes
 
   return { stats, loading, error };
 }
@@ -190,16 +209,18 @@ export function useProductCategories() {
   const [categories, setCategories] = useState<CategoryBreakdown[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { refreshKey } = useDashboardRefresh();
 
   useEffect(() => {
     const fetchCategories = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`${API_BASE_URL}/products/categories`, {
+        const response = await fetch(`${API_BASE_URL}/products/categories?_t=${Date.now()}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
+          cache: 'no-store',
         });
 
         if (!response.ok) {
@@ -207,7 +228,9 @@ export function useProductCategories() {
         }
 
         const data = await response.json();
+        console.log('📊 Product categories updated:', data.data);
         setCategories(data.data);
+        setError(null);
       } catch (err) {
         setError(err as Error);
         console.error('Error fetching product categories:', err);
@@ -217,7 +240,7 @@ export function useProductCategories() {
     };
 
     fetchCategories();
-  }, []);
+  }, [refreshKey]); // Re-fetch when refreshKey changes
 
   return { categories, loading, error };
 }
@@ -229,6 +252,7 @@ export function useRecentUploads() {
   const [uploads, setUploads] = useState<RecentUpload[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const { refreshKey } = useDashboardRefresh();
 
   useEffect(() => {
     const fetchRecentUploads = async () => {
@@ -237,26 +261,25 @@ export function useRecentUploads() {
         
         // Fetch recent products and gallery images in parallel
         const [productsResponse, galleryResponse] = await Promise.all([
-          fetch(`${API_BASE_URL}/products?limit=5&sort=-createdAt`, {
+          fetch(`${API_BASE_URL}/products?limit=5&sort=-createdAt&_t=${Date.now()}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
+            cache: 'no-store',
           }),
-          fetch(`${API_BASE_URL}/gallery?limit=5&sort=date`, {
+          fetch(`${API_BASE_URL}/gallery?limit=5&sort=-uploadedAt&_t=${Date.now()}`, {
             method: 'GET',
             headers: {
               'Content-Type': 'application/json',
             },
+            cache: 'no-store',
           }),
         ]);
 
-        if (!productsResponse.ok || !galleryResponse.ok) {
-          throw new Error('Failed to fetch recent uploads');
-        }
-
-        const productsData = await productsResponse.json();
-        const galleryData = await galleryResponse.json();
+        // Check responses - don't throw if one fails, just use what works
+        const productsData = productsResponse.ok ? await productsResponse.json() : { data: [] };
+        const galleryData = galleryResponse.ok ? await galleryResponse.json() : { data: [] };
 
         // Combine and format the data
         const recentProducts: RecentUpload[] = (productsData.data || []).map((product: any) => ({
@@ -283,6 +306,7 @@ export function useRecentUploads() {
           .slice(0, 10);
 
         setUploads(combined);
+        setError(null);
       } catch (err) {
         setError(err as Error);
         console.error('Error fetching recent uploads:', err);
@@ -292,7 +316,7 @@ export function useRecentUploads() {
     };
 
     fetchRecentUploads();
-  }, []);
+  }, [refreshKey]); // Re-fetch when refreshKey changes
 
   return { uploads, loading, error };
 }

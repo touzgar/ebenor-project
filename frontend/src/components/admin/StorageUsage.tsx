@@ -10,8 +10,8 @@ export function StorageUsage() {
   const totalSize = stats?.totalSize || 0;
   const totalSizeMB = (totalSize / (1024 * 1024)).toFixed(2);
 
-  // Assume a storage limit (e.g., 5GB = 5120 MB)
-  const storageLimitMB = 5120;
+  // Storage limit (5GB = 5120 MB) - can be customized via environment variable
+  const storageLimitMB = parseInt(process.env.NEXT_PUBLIC_STORAGE_LIMIT_MB || '5120', 10);
   const usagePercentage = totalSize > 0 ? (parseFloat(totalSizeMB) / storageLimitMB) * 100 : 0;
 
   // Calculate breakdown by source

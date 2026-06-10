@@ -1,0 +1,55 @@
+/* AGGRESSIVE: Hide ALL checkboxes on products admin page */
+input[type="checkbox"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide bulk selection checkboxes and action bar */
+.products-table input[type="checkbox"] {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/* Hide any bulk action bars - AGGRESSIVE */
+.bulk-actions-bar,
+[class*="bulk-action"],
+[class*="BulkAction"],
+[class*="ProductBulk"],
+[class*="bulk"],
+[class*="Bulk"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+
+/* Hide checkbox column header */
+.products-table th:has(input[type="checkbox"]),
+.products-table td:has(input[type="checkbox"]) {
+  display: none !important;
+}
+
+/* Hide any yellow/amber action bars with buttons */
+[class*="bg-amber"][class*="p-"]:has(button),
+[class*="bg-yellow"]:has(button) {
+  display: none !important;
+}
+
+/* Hide first column if it contains checkboxes */
+.products-table tbody tr td:first-child:has(input[type="checkbox"]),
+.products-table thead tr th:first-child:has(input[type="checkbox"]),
+tbody tr td:first-child:has(input[type="checkbox"]),
+thead tr th:first-child:has(input[type="checkbox"]) {
+  display: none !important;
+}
+
+/* Target the specific sticky action bar that appears */
+div[class*="fixed"]:has(button[class*="Mettre"]),
+div[class*="sticky"]:has(button),
+div[class*="z-50"]:has(button[class*="vedette"]) {
+  display: none !important;
+}
+

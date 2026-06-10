@@ -2,6 +2,12 @@ import type { Metadata } from 'next';
 import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/components/providers/Providers';
+import { suppressConsoleInProduction } from '@/lib/suppressConsole';
+
+// Suppress console logs in production
+if (typeof window !== 'undefined') {
+  suppressConsoleInProduction();
+}
 
 const inter = Inter({
   subsets: ['latin'],

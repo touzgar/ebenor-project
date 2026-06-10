@@ -12,27 +12,12 @@ export function About() {
   const isInView = useInView(ref, { once: true, margin: '-100px' });
   const { content, loading } = useHomeContent();
 
-  if (loading || !content) {
-    return (
-      <section id="about" className="py-24 bg-[#F5F5F5]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="h-[600px] bg-gray-200 rounded-2xl animate-pulse" />
-            <div className="space-y-8">
-              <div className="h-8 bg-gray-200 rounded animate-pulse" />
-              <div className="h-16 bg-gray-200 rounded animate-pulse" />
-              <div className="h-24 bg-gray-200 rounded animate-pulse" />
-            </div>
-          </div>
-        </div>
-      </section>
-    );
-  }
+  if (loading || !content) return null;
 
   return (
-    <section id="about" className="py-24 bg-[#F5F5F5]" ref={ref}>
+    <section id="about" className="py-0 bg-[#F5F5F5]" ref={ref}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-4 items-center">
           {/* Image */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -71,7 +56,7 @@ export function About() {
               transition={{ delay: 0.7, duration: 0.6 }}
               className="absolute -bottom-6 -left-6 bg-white p-6 rounded-xl shadow-xl"
             >
-              <p className="text-sm text-gray-600 mb-1">Années d'expérience</p>
+              <p className="text-sm text-gray-600 mb-2">Années d'expérience</p>
               <p className="font-bold text-[#C9A14A] text-lg">Savoir-faire artisanal</p>
             </motion.div>
           </motion.div>
@@ -81,7 +66,7 @@ export function About() {
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="space-y-8"
+            className="space-y-2"
           >
             <div>
               <motion.span
@@ -97,7 +82,7 @@ export function About() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.4, duration: 0.6 }}
-                className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-4 leading-tight"
+                className="text-4xl md:text-5xl font-serif text-[#0D0D0D] mt-0 leading-tight"
               >
                 {content.about.title}
               </motion.h2>
@@ -117,7 +102,7 @@ export function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="space-y-3"
+              className="space-y-2"
             >
               {content.about.highlights.map((highlight: string, index: number) => (
                 <motion.div
@@ -138,7 +123,7 @@ export function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.7, duration: 0.6 }}
-              className="grid grid-cols-3 gap-8 pt-8"
+              className="grid grid-cols-3 gap-4 pt-0"
             >
               <div className="text-center">
                 <div className="text-3xl font-bold text-[#C9A14A] mb-2">500+</div>
@@ -158,9 +143,9 @@ export function About() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="pt-4"
+              className="pt-0"
             >
-              <button className="bg-[#0D0D0D] text-white px-8 py-4 rounded-full font-semibold hover:bg-[#C9A14A] hover:text-black transition-all duration-300 transform hover:scale-105">
+              <button className="bg-[#0D0D0D] text-white px-8 py-0 rounded-full font-semibold hover:bg-[#C9A14A] hover:text-black transition-all duration-300 transform hover:scale-105">
                 Découvrir notre atelier
               </button>
             </motion.div>

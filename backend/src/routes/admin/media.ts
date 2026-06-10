@@ -39,7 +39,10 @@ router.get('/by-category/:category', mediaLibraryController.getMediaByCategory.b
 router.get('/by-source/:source', mediaLibraryController.getMediaBySource.bind(mediaLibraryController));
 
 // Delete media
-router.delete('/:id', mediaLibraryController.deleteMedia.bind(mediaLibraryController));
+router.delete('/', mediaLibraryController.deleteMedia.bind(mediaLibraryController));
+
+// Delete all media
+router.delete('/all', mediaLibraryController.deleteAllMedia.bind(mediaLibraryController));
 
 // Replace media
 router.put('/:id/replace', mediaLibraryController.replaceMedia.bind(mediaLibraryController));

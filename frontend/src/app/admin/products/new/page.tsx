@@ -6,18 +6,29 @@ import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
 import { useProductForm, useProductTags, useProductMaterials, useProductFinishes } from '@/hooks/useProductForm';
-import { productsService } from '@/lib/api';
+import { productsService, galleryService, categoryService } from '@/lib/api';
 import { Breadcrumb, ProductImageManager, ProductVideoManager } from '@/components/admin';
 import type { ProductImage, ProductVideo } from '@/components/admin';
 import { PRODUCT_CATEGORIES } from '@/lib/validations/product';
 import type { ProductFormData } from '@/lib/validations/product';
 import { LoadingSpinner, LoadingButton } from '@/components/ui';
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+}
+
 export default function NewProductPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  
+  // Categories state
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
   // Initialize form
   const {
@@ -73,6 +84,27 @@ export default function NewProductPage() {
       router.push('/admin/login');
     }
   }, [isAuthenticated, authLoading, router]);
+
+  // Fetch categories
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await categoryService.getAll({ isActive: 'true', limit: 100 });
+      if (response.success && response.data) {
+        setCategories(response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   // Handler functions for dynamic arrays
   const handleAddSpecification = () => {
@@ -190,17 +222,87 @@ export default function NewProductPage() {
     setSubmitError(null);
 
     try {
-      // Prepare data for API with proper handling of optional fields
+      // STEP 1: Upload all images that haven't been uploaded yet
+      const uploadedImages = [];
       
-      // Convert empty strings to undefined for optional string fields
-      const subcategory = data.subcategory?.trim() || undefined;
-      const seoTitle = data.seoTitle?.trim() || undefined;
-      const seoDescription = data.seoDescription?.trim() || undefined;
+      for (let i = 0; i < images.length; i++) {
+        const image = images[i];
+        
+        // Only process images that need uploading (have file property)
+        if (image.file) {
+          try {
+            const formData = new FormData();
+            formData.append('image', image.file);
+            formData.append('title', image.alt || image.file.name.replace(/\.[^/.]+$/, ''));
+            formData.append('alt', image.alt || image.file.name.replace(/\.[^/.]+$/, ''));
+            formData.append('category', 'product');
+            
+            const uploadResponse = await galleryService.uploadImage(formData);
+            
+            if (uploadResponse.success && uploadResponse.data) {
+              uploadedImages.push({
+                url: uploadResponse.data.url,
+                alt: image.alt || uploadResponse.data.alt,
+                isPrimary: image.isPrimary,
+              });
+            } else {
+              throw new Error(`Échec du téléchargement de l'image ${i + 1}`);
+            }
+          } catch (uploadError: any) {
+            throw new Error(`Erreur lors du téléchargement de l'image ${i + 1}: ${uploadError.message || 'Erreur inconnue'}`);
+          }
+        } else if (image.url) {
+          // Image already has URL (already uploaded)
+          uploadedImages.push({
+            url: image.url,
+            alt: image.alt || '',
+            isPrimary: image.isPrimary,
+          });
+        }
+        // Skip images without file AND without url
+      }
       
-      // Only include dimensions if at least one dimension field is filled
-      let dimensions = undefined;
+      // STEP 2: Prepare payload - ONLY include valid data
+      const payload: any = {
+        name: data.name.trim(),
+        category: data.category,
+        shortDescription: data.shortDescription.trim(),
+        description: data.description.trim(),
+        availability: data.availability || 'made_to_order',
+        featured: data.featured || false,
+      };
+      
+      // Add optional fields ONLY if they have valid values
+      if (data.slug?.trim()) {
+        payload.slug = data.slug.trim();
+      }
+      
+      if (data.subcategory?.trim()) {
+        payload.subcategory = data.subcategory.trim();
+      }
+      
+      // CRITICAL: Only add images if we have valid uploaded images with URLs
+      if (uploadedImages.length > 0) {
+        payload.images = uploadedImages;
+      }
+      
+      // Add video only if it exists and has required fields
+      if (video && video.url) {
+        payload.video = {
+          url: video.url,
+          publicId: video.publicId,
+          thumbnail: video.thumbnail,
+        };
+      }
+      
+      // Add specifications only if not empty
+      if (data.specifications && Object.keys(data.specifications).length > 0) {
+        payload.specifications = data.specifications;
+      }
+      
+      // Add dimensions only if at least one dimension is provided
       if (data.dimensions?.length || data.dimensions?.width || data.dimensions?.height) {
-        dimensions = {
+        payload.dimensions = {
           length: data.dimensions.length || undefined,
           width: data.dimensions.width || undefined,
           height: data.dimensions.height || undefined,
@@ -208,80 +310,62 @@ export default function NewProductPage() {
         };
       }
       
-      // Only include price if amount is provided
-      let price = undefined;
+      // Add materials only if array is not empty
+      if (data.materials && data.materials.length > 0) {
+        payload.materials = data.materials;
+      }
+      
+      // Add finishes only if array is not empty
+      if (data.finishes && data.finishes.length > 0) {
+        payload.finishes = data.finishes;
+      }
+      
+      // Add price only if amount is provided
       if (data.price?.amount && data.price.amount > 0) {
-        price = {
+        payload.price = {
           amount: data.price.amount,
           currency: data.price.currency || 'TND',
           unit: data.price.unit?.trim() || undefined,
         };
       }
       
-      // Prepare images data
-      const imagesData = images.map(img => ({
-        url: img.url,
-        alt: img.alt || '',
-        isPrimary: img.isPrimary,
-      }));
-      
-      // Prepare video data
-      let videoData = undefined;
-      if (video) {
-        videoData = {
-          url: video.url,
-          publicId: video.publicId,
-          thumbnail: video.thumbnail,
-        };
+      // Add SEO fields only if provided
+      if (data.seoTitle?.trim()) {
+        payload.seoTitle = data.seoTitle.trim();
       }
       
-      const payload = {
-        name: data.name.trim(),
-        slug: data.slug.trim(),
-        category: data.category,
-        subcategory,
-        shortDescription: data.shortDescription.trim(),
-        description: data.description.trim(),
-        images: imagesData,
-        video: videoData,
-        specifications: data.specifications || {},
-        dimensions,
-        materials: data.materials || [],
-        finishes: data.finishes || [],
-        price,
-        availability: data.availability || 'made_to_order',
-        featured: data.featured || false,
-        seoTitle,
-        seoDescription,
-        tags: data.tags || [],
-      };
+      if (data.seoDescription?.trim()) {
+        payload.seoDescription = data.seoDescription.trim();
+      }
+      
+      // Add tags only if array is not empty
+      if (data.tags && data.tags.length > 0) {
+        payload.tags = data.tags;
+      }
 
       const response = await productsService.create(payload);
 
-      if (response.success) {
-        // Show success message
-        alert('Produit créé avec succès !');
-        
-        // Redirect to products list
-        router.push('/admin/products');
+      if (response.success && response.data?._id) {
+        // Redirect with success parameter for popup and table refresh
+        router.push(`/admin/products?success=true&name=${encodeURIComponent(response.data.name)}&refresh=${Date.now()}`);
       } else {
-        throw new Error(response.message || 'Erreur lors de la création du produit');
+        throw new Error(response.message || 'Erreur: Le produit n\'a pas été créé');
       }
     } catch (error: any) {
-      console.error('Error creating product:', error);
-      
-      // Provide more detailed error messages
       let errorMessage = 'Une erreur est survenue lors de la création du produit';
       
       if (error.message) {
         errorMessage = error.message;
-      } else if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
+      }
+      
+      // Display validation errors if available
+      if (error.response?.data?.details) {
+        const details = error.response.data.details;
+        const errorList = details.map((d: any) => `• ${d.field}: ${d.message}`).join('\n');
+        errorMessage = `Erreurs de validation:\n\n${errorList}`;
       }
       
       setSubmitError(errorMessage);
-      
-      // Scroll to top to show error message
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } finally {
       setIsSubmitting(false);
@@ -457,18 +541,37 @@ export default function NewProductPage() {
                   <select
                     id="category"
                     {...register('category')}
+                    disabled={loadingCategories}
                     className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
                       errors.category ? 'border-red-500' : 'border-neutral-300'
-                    }`}
+                    } ${loadingCategories ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {PRODUCT_CATEGORIES.map((category) => (
-                      <option key={category} value={category}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </option>
-                    ))}
+                    <option value="">Sélectionner une catégorie</option>
+                    {loadingCategories ? (
+                      <option disabled>Chargement des catégories...</option>
+                    ) : categories.length > 0 ? (
+                      categories.map((category) => (
+                        <option key={category._id} value={category.slug}>
+                          {category.name}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        {PRODUCT_CATEGORIES.map((category) => (
+                          <option key={category} value={category}>
+                            {category.charAt(0).toUpperCase() + category.slice(1)}
+                          </option>
+                        ))}
+                      </>
+                    )}
                   </select>
                   {errors.category && (
                     <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+                  )}
+                  {categories.length === 0 && !loadingCategories && (
+                    <p className="text-xs text-amber-600 mt-1">
+                      Aucune catégorie disponible. <Link href="/admin/categories" className="underline">Créer des catégories</Link>
+                    </p>
                   )}
                 </div>
 

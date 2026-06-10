@@ -11,55 +11,57 @@ interface QuickAction {
   href: string;
 }
 
+// Externalize quick actions configuration for easy modification
+const QUICK_ACTIONS: QuickAction[] = [
+  {
+    title: 'Ajouter un Produit',
+    description: 'Créer un nouveau produit',
+    color: 'from-amber-500 to-amber-600',
+    href: '/admin/products/new',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Gérer la Galerie',
+    description: 'Ajouter des images',
+    color: 'from-blue-500 to-blue-600',
+    href: '/admin/gallery',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Messages',
+    description: 'Voir les messages clients',
+    color: 'from-green-500 to-green-600',
+    href: '/admin/messages',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+      </svg>
+    ),
+  },
+  {
+    title: 'Modifier le Contenu',
+    description: 'Éditer la page d\'accueil',
+    color: 'from-purple-500 to-purple-600',
+    href: '/admin/content',
+    icon: (
+      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+      </svg>
+    ),
+  },
+];
+
 export function QuickActions() {
   const router = useRouter();
-
-  const actions: QuickAction[] = [
-    {
-      title: 'Ajouter un Produit',
-      description: 'Créer un nouveau produit',
-      color: 'from-amber-500 to-amber-600',
-      href: '/admin/products/new',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Gérer la Galerie',
-      description: 'Ajouter des images',
-      color: 'from-blue-500 to-blue-600',
-      href: '/admin/gallery',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Messages',
-      description: 'Voir les messages clients',
-      color: 'from-green-500 to-green-600',
-      href: '/admin/messages',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-        </svg>
-      ),
-    },
-    {
-      title: 'Modifier le Contenu',
-      description: 'Éditer la page d\'accueil',
-      color: 'from-purple-500 to-purple-600',
-      href: '/admin/content',
-      icon: (
-        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-        </svg>
-      ),
-    },
-  ];
+  const actions = QUICK_ACTIONS;
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-neutral-200 p-6">

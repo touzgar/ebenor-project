@@ -24,6 +24,8 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { galleryService } from '@/lib/api';
 import SortableGalleryItem from '@/components/admin/SortableGalleryItem';
+import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
+import { DeleteConfirmModalItem } from '@/components/admin/DeleteConfirmModalItem';
 import GalleryBulkActions from '@/components/admin/GalleryBulkActions';
 import type { GalleryImage } from '@/types';
 
@@ -144,16 +146,36 @@ export default function GalleryListPage() {
     setCurrentPage(1);
   };
 
-  // Handle delete
-  const handleDelete = async (imageId: string) => {
-    if (confirm('Êtes-vous sûr de vouloir supprimer cette image ?')) {
-      try {
-        await galleryService.deleteImage(imageId);
-        setCurrentPage(1);
-      } catch (err) {
-        alert('Erreur lors de la suppression');
+  // Handle delete (use modal)
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; imageId: string | null; isDeleting: boolean; image?: GalleryImage | null }>({ isOpen: false, imageId: null, isDeleting: false, image: null });
+
+  const handleDelete = (imageId: string) => {
+    const image = images.find((img) => img._id === imageId) || null;
+    setDeleteModal({ isOpen: true, imageId, isDeleting: false, image });
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteModal.imageId) return;
+    setDeleteModal((s) => ({ ...s, isDeleting: true }));
+    try {
+      const response = await galleryService.deleteImage(deleteModal.imageId);
+      if (response && response.success) {
+        // remove from UI
+        setImages((prev) => prev.filter((img) => img._id !== deleteModal.imageId));
+        setTotalImages((t) => Math.max(0, t - 1));
+      } else {
+        throw new Error(response?.message || 'Erreur lors de la suppression');
       }
+    } catch (err) {
+      console.error('Error deleting image:', err);
+      alert('Erreur lors de la suppression');
+    } finally {
+      setDeleteModal({ isOpen: false, imageId: null, isDeleting: false, image: null });
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteModal({ isOpen: false, imageId: null, isDeleting: false, image: null });
   };
 
   // Drag and drop handlers
@@ -223,6 +245,14 @@ export default function GalleryListPage() {
 
   return (
     <div className="min-h-screen bg-neutral-50">
+      {/* Delete Confirmation Modal for gallery images */}
+      <DeleteConfirmModalItem
+        isOpen={deleteModal.isOpen}
+        image={deleteModal.image}
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+        isDeleting={deleteModal.isDeleting}
+      />
       {/* Header */}
       <div className="bg-white border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

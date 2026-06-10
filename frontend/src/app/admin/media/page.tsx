@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
+import { toast } from '@/lib/toast';
 import { mediaService } from '@/lib/api';
 import { 
   MagnifyingGlassIcon, 
@@ -170,21 +171,18 @@ export default function MediaLibraryPage() {
 
       // Check references first
       const refResponse = await mediaService.getReferences(selectedMedia.url);
-      if (refResponse.success && refResponse.data) {
-        if (refResponse.data.inUse) {
-          setReferences(refResponse.data.references);
-          setShowDeleteModal(false);
-          setShowReferencesModal(true);
-          return;
-        }
+      if (refResponse.success && refResponse.data && refResponse.data.inUse) {
+        // If referenced elsewhere, log references but proceed with deletion per user preference
+        console.warn('Media is referenced in other resources, proceeding to delete anyway:', refResponse.data.references);
       }
 
-      // Delete if no references
+      // Proceed to delete regardless of references (will update server-side references as configured)
       const response = await mediaService.delete(selectedMedia.url);
 
-      if (response.success) {
-        alert('Média supprimé avec succès');
+      if (response && response.success) {
+        toast.success('Média supprimé avec succès');
         setShowDeleteModal(false);
+        setShowReferencesModal(false);
         setSelectedMedia(null);
         fetchMedia();
         fetchStats();
@@ -276,6 +274,41 @@ export default function MediaLibraryPage() {
           <p className="mt-2 text-neutral-600">
             Gérez tous vos fichiers médias en un seul endroit
           </p>
+          {/* Dev-only: Clear all media button */}
+          {process.env.NODE_ENV !== 'production' && media.length > 0 && (
+            <div className="mt-4">
+              <button
+                onClick={async () => {
+                  if (!confirm('Confirmer suppression de tous les médias affichés ? Cette action est irréversible.')) return;
+                  try {
+                    setActionLoading(true);
+                    for (const item of media) {
+                      try {
+                        // attempt to delete each media by URL
+                        // ignore errors for individual items
+                        await mediaService.delete(item.url);
+                      } catch (e) {
+                        console.warn('Failed to delete media', item.url, e);
+                      }
+                    }
+                    toast.success('Suppression terminée');
+                    // Refresh lists
+                    setSelectedMedia(null);
+                    await fetchMedia();
+                    await fetchStats();
+                  } catch (err) {
+                    console.error('Error clearing media:', err);
+                    toast.error('Erreur lors de la suppression en masse');
+                  } finally {
+                    setActionLoading(false);
+                  }
+                }}
+                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Supprimer tous les médias affichés (dev)
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Stats Cards */}

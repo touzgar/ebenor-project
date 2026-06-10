@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
 import { motion } from 'framer-motion';
-import Image from 'next/image';
 import Link from 'next/link';
 import { HiPhone, HiMail, HiLocationMarker } from 'react-icons/hi';
 import { FaFacebook, FaInstagram, FaLinkedin } from 'react-icons/fa';
+import { useHomeContent } from '@/hooks/useHomeContent';
 
 const navigation = {
   company: [
@@ -41,12 +41,25 @@ const socialLinks = [
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
+  const { content } = useHomeContent();
 
   return (
-    <footer className="bg-[#0D0D0D] text-white" role="contentinfo" aria-label="Pied de page du site">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className="relative text-white overflow-hidden" role="contentinfo" aria-label="Pied de page du site">
+      {/* Background Image - FULL COVERAGE */}
+      <div className="absolute inset-0 z-0">
+        <div
+          className="w-full h-full bg-cover bg-center bg-fixed"
+          style={{
+            backgroundImage: `url('https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=90')`
+          }}
+        />
+        {/* Simple overlay for text readability */}
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+
+      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main Footer Content */}
-        <div className="py-16">
+        <div className="py-16 lg:py-20">
           <div className="grid lg:grid-cols-4 gap-12">
             {/* Brand Section */}
             <div className="lg:col-span-1">
@@ -57,7 +70,7 @@ export function Footer() {
                 viewport={{ once: true }}
               >
                 <Link href="/" className="inline-block mb-6 focus-visible-enhanced rounded" aria-label="ÉBÉNOR CRÉATION - Retour à l'accueil">
-                  <Image
+                  <img
                     src="/logo/logo.png"
                     alt="ÉBÉNOR CRÉATION - Logo"
                     width={180}
@@ -71,28 +84,29 @@ export function Footer() {
                   Nous transformons vos rêves en réalité avec passion et savoir-faire.
                 </p>
 
-                {/* Contact Info */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center text-gray-400">
-                    <HiPhone className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
-                    <a href="tel:+21670123456" className="hover:text-white transition-colors focus-visible-enhanced rounded">
-                      +216 70 123 456
-                    </a>
+                {/* Contact Info - Dynamic */}
+                {content?.contact && (
+                  <div className="space-y-3 mb-6">
+                    <div className="flex items-center text-gray-400">
+                      <HiPhone className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
+                      <a href={`tel:${content.contact.phone}`} className="hover:text-white transition-colors focus-visible-enhanced rounded">
+                        {content.contact.phone}
+                      </a>
+                    </div>
+                    <div className="flex items-center text-gray-400">
+                      <HiMail className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
+                      <a href={`mailto:${content.contact.email}`} className="hover:text-white transition-colors focus-visible-enhanced rounded">
+                        {content.contact.email}
+                      </a>
+                    </div>
+                    <div className="flex items-start text-gray-400">
+                      <HiLocationMarker className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                      <address className="not-italic">
+                        {content.contact.address}
+                      </address>
+                    </div>
                   </div>
-                  <div className="flex items-center text-gray-400">
-                    <HiMail className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
-                    <a href="mailto:contact@ebenor-creation.tn" className="hover:text-white transition-colors focus-visible-enhanced rounded">
-                      contact@ebenor-creation.tn
-                    </a>
-                  </div>
-                  <div className="flex items-start text-gray-400">
-                    <HiLocationMarker className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0 mt-0.5" aria-hidden="true" />
-                    <address className="not-italic">
-                      Zone Industrielle<br />
-                      Tunis, Tunisie
-                    </address>
-                  </div>
-                </div>
+                )}
 
                 {/* Social Links */}
                 <div className="flex space-x-4" role="list" aria-label="Réseaux sociaux">
@@ -213,12 +227,12 @@ export function Footer() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="border-t border-gray-800 py-12"
+          className="border-t border-white/10 py-12 backdrop-blur-sm"
         >
           <div className="grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h3 className="text-2xl font-serif mb-2">Restez informé</h3>
-              <p className="text-gray-400">
+              <p className="text-gray-300">
                 Recevez nos dernières créations et actualités directement dans votre boîte mail.
               </p>
             </div>
@@ -229,7 +243,7 @@ export function Footer() {
                 id="newsletter-email"
                 name="email"
                 placeholder="Votre adresse email"
-                className="flex-1 px-4 py-3 bg-white/5 border border-gray-700 rounded-full text-white placeholder-gray-400 focus:outline-none focus:border-[#C9A14A] focus-visible-enhanced transition-colors"
+                className="flex-1 px-4 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-white placeholder-gray-300 focus:outline-none focus:border-[#C9A14A] focus-visible-enhanced transition-colors"
                 aria-label="Adresse email pour la newsletter"
                 required
               />
@@ -249,17 +263,17 @@ export function Footer() {
           whileInView={{ opacity: 1 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="border-t border-gray-800 py-8"
+          className="border-t border-white/10 py-8 backdrop-blur-sm"
         >
           <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
+            <p className="text-gray-300 text-sm">
               © {currentYear} ÉBÉNOR CRÉATION. Tous droits réservés.
             </p>
             <div className="flex items-center space-x-6 mt-4 md:mt-0">
-              <span className="text-gray-400 text-sm">Fait avec ❤️ en Tunisie</span>
+              <span className="text-gray-300 text-sm">Fait avec ❤️ en Tunisie</span>
               <div className="flex items-center space-x-2">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                <span className="text-gray-400 text-sm">Service client disponible</span>
+                <span className="text-gray-300 text-sm">Service client disponible</span>
               </div>
             </div>
           </div>

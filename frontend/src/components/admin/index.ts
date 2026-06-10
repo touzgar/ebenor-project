@@ -10,3 +10,5 @@ export { ProductImageManager } from './ProductImageManager';
 export type { ProductImage } from './ProductImageManager';
 export { ProductVideoManager } from './ProductVideoManager';
 export type { ProductVideo } from './ProductVideoManager';
+export { DeleteConfirmModal } from './DeleteConfirmModal';
+export { SaveSuccessModal } from './SaveSuccessModal';

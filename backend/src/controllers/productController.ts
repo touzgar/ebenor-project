@@ -5,6 +5,8 @@ import { ApiResponse, PaginatedResponse } from '@/types';
 import { logger } from '@/utils/logger';
 import { MockDataService } from '@/services/mockDataService';
 import { cacheService } from '@/services/cacheService';
+import { fileUploadService } from '@/services/fileUploadService';
+import { mediaLibraryService } from '@/services/mediaLibraryService';
 import { measureQueryPerformance } from '@/middleware/queryPerformance';
 
 export class ProductController {
@@ -466,21 +468,23 @@ export class ProductController {
    */
   public async createProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const productData = req.body;
+      const productData: any = req.body;
 
-      // Ajouter l'utilisateur créateur
-      if (req.user) {
-        productData.createdBy = req.user.id;
-        productData.updatedBy = req.user.id;
+      const authenticatedReq = req as any;
+      if (authenticatedReq.user) {
+        productData.createdBy = authenticatedReq.user.id;
+        productData.updatedBy = authenticatedReq.user.id;
       }
 
-      // Créer le produit
       const product = new Product(productData);
       await product.save();
 
-      // Invalidate product caches
-      cacheService.invalidateProducts();
+      const savedProduct = await Product.findById(product._id);
+      if (!savedProduct) {
+        throw new Error('Product was not saved to database');
+      }
 
+      cacheService.invalidateProducts();
       logger.info('Product created', { productId: product._id, name: product.name });
 
       const response: ApiResponse = {
@@ -490,7 +494,8 @@ export class ProductController {
       };
 
       res.status(201).json(response);
-    } catch (error) {
+    } catch (error: any) {
+      logger.error('Error creating product:', error.message);
       next(error);
     }
   }
@@ -502,7 +507,7 @@ export class ProductController {
   public async updateProduct(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const updateData: any = req.body;
 
       const product = await Product.findById(id);
 
@@ -516,9 +521,10 @@ export class ProductController {
 
       const oldSlug = product.slug;
 
-      // Ajouter l'utilisateur qui fait la mise à jour
-      if (req.user) {
-        updateData.updatedBy = req.user.id;
+      // Add user who updated
+      const authenticatedReq = req as any;
+      if (authenticatedReq.user) {
+        updateData.updatedBy = authenticatedReq.user.id;
       }
 
       // Mettre à jour les champs
@@ -560,6 +566,46 @@ export class ProductController {
         );
       }
 
+      // Attempt to delete associated media files (images/videos) if they are not referenced elsewhere
+      try {
+        const mediaUrls: string[] = [];
+
+        if (product.images && Array.isArray(product.images)) {
+          for (const img of product.images) {
+            if (img && img.url) mediaUrls.push(img.url);
+          }
+        }
+
+        // If product has a video field (legacy/support), include it
+        // @ts-ignore - some products may include video info in payload
+        if ((product as any).video && (product as any).video.url) {
+          mediaUrls.push((product as any).video.url);
+        }
+
+        for (const url of mediaUrls) {
+          try {
+            const refs = await mediaLibraryService.findMediaReferences(url);
+
+            // If only referenced by this product, it's safe to delete the underlying file
+            const onlyProductRef = refs.length === 1 && refs[0].type === 'product' && refs[0].id === id;
+
+            if (refs.length === 0 || onlyProductRef) {
+              // Use fileUploadService.deleteFile which handles UploadThing or Cloudinary
+              await fileUploadService.deleteFile(url, (url.toLowerCase().endsWith('.mp4') || url.toLowerCase().endsWith('.webm')) ? 'video' : 'image');
+              logger.info('Associated media deleted with product', { productId: id, url });
+            } else {
+              logger.info('Skipping media deletion because it is referenced elsewhere', { productId: id, url, references: refs.map(r => `${r.type}:${r.id}`) });
+            }
+          } catch (mediaErr) {
+            // Log and continue deletion of product - don't block product removal on media errors
+            logger.warn('Failed to delete associated media for product - continuing', { productId: id, url, error: (mediaErr as Error).message });
+          }
+        }
+      } catch (err) {
+        logger.warn('Error while attempting to delete associated media for product', { productId: id, error: (err as Error).message });
+      }
+
+      // Delete the product document
       await Product.findByIdAndDelete(id);
 
       // Invalidate product caches

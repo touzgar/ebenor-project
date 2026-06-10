@@ -56,7 +56,6 @@ class ApiClient {
 
       return csrfToken;
     } catch (error) {
-      console.error('Erreur lors de la récupération du token CSRF:', error);
       throw error;
     }
   }
@@ -101,7 +100,6 @@ class ApiClient {
       try {
         csrfToken = await this.getCsrfToken();
       } catch (error) {
-        console.error('Impossible d\'obtenir le token CSRF:', error);
         // Continuer sans token CSRF - le serveur renverra une erreur appropriée
       }
     }
@@ -124,7 +122,6 @@ class ApiClient {
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
         const text = await response.text();
-        console.error('Non-JSON response received:', text);
         throw new Error(`Le serveur a retourné une réponse invalide. Veuillez réessayer plus tard.`);
       }
 
@@ -132,7 +129,6 @@ class ApiClient {
 
       // Si erreur CSRF, rafraîchir le token et réessayer une fois
       if (!response.ok && (data.code === 'CSRF_TOKEN_INVALID' || data.code === 'CSRF_TOKEN_MISSING')) {
-        console.warn('Token CSRF invalide, rafraîchissement...');
         await this.refreshCsrfToken();
         
         // Réessayer la requête avec le nouveau token
@@ -140,12 +136,16 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        // Create error with details preserved
+        const error: any = new Error(data.message || `HTTP error! status: ${response.status}`);
+        error.response = { data }; // Preserve the full response data
+        error.status = response.status;
+        throw error;
       }
 
       return data;
-    } catch (error) {
-      console.error('API request failed:', error);
+    } catch (error: any) {
+      // Re-throw to preserve error details
       throw error;
     }
   }
@@ -191,7 +191,7 @@ class ApiClient {
     try {
       csrfToken = await this.getCsrfToken();
     } catch (error) {
-      console.error('Impossible d\'obtenir le token CSRF pour l\'upload:', error);
+      // Continue without CSRF token - server will return appropriate error
     }
 
     const config: RequestInit = {
@@ -210,7 +210,6 @@ class ApiClient {
 
       // Si erreur CSRF, rafraîchir le token et réessayer
       if (!response.ok && (data.code === 'CSRF_TOKEN_INVALID' || data.code === 'CSRF_TOKEN_MISSING')) {
-        console.warn('Token CSRF invalide lors de l\'upload, rafraîchissement...');
         await this.refreshCsrfToken();
         
         // Réessayer l'upload avec le nouveau token
@@ -218,12 +217,16 @@ class ApiClient {
       }
 
       if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+        // Create error with details preserved
+        const error: any = new Error(data.message || `HTTP error! status: ${response.status}`);
+        error.response = { data }; // Preserve the full response data
+        error.status = response.status;
+        throw error;
       }
 
       return data;
-    } catch (error) {
-      console.error('Upload failed:', error);
+    } catch (error: any) {
+      // Re-throw to preserve error details
       throw error;
     }
   }
@@ -251,7 +254,12 @@ export const productsService = {
     const searchParams = new URLSearchParams(params);
     return apiClient.get(`/products?${searchParams}`);
   },
-  getById: (id: string) => apiClient.get(`/products/${id}`),
+  getAllAdmin: (params?: Record<string, any>) => {
+    const searchParams = new URLSearchParams(params);
+    return apiClient.get(`/admin/products?${searchParams}`);
+  },
+  getById: (id: string) => apiClient.get(`/admin/products/${id}`), // Admin endpoint for ID lookup
+  getBySlug: (slug: string) => apiClient.get(`/products/slug/${slug}`), // Public endpoint for slug lookup
   create: (data: any) => apiClient.post('/admin/products', data),
   update: (id: string, data: any) => apiClient.put(`/admin/products/${id}`, data),
   delete: (id: string) => apiClient.delete(`/admin/products/${id}`),
@@ -291,7 +299,8 @@ export const mediaService = {
   },
   getStats: () => apiClient.get('/admin/media/stats'),
   getReferences: (url: string) => apiClient.get(`/admin/media/references?url=${encodeURIComponent(url)}`),
-  delete: (url: string) => apiClient.delete('/admin/media/delete', { url }),
+  delete: (url: string) => apiClient.delete('/admin/media', { url }),
+  deleteAll: () => apiClient.delete('/admin/media/all'),
   replace: (oldUrl: string, newUrl: string) => 
     apiClient.put('/admin/media/replace', { oldUrl, newUrl }),
   uploadAndReplace: (oldUrl: string, file: File) => {
@@ -313,6 +322,18 @@ export const mediaService = {
     return apiClient.get(`/admin/media/by-source/${source}?${searchParams}`);
   },
   getStorageUsage: () => apiClient.get('/admin/media/storage'),
+};
+
+export const categoryService = {
+  getAll: (params?: Record<string, any>) => {
+    const searchParams = new URLSearchParams(params);
+    return apiClient.get(`/admin/categories?${searchParams}`);
+  },
+  getById: (id: string) => apiClient.get(`/admin/categories/${id}`),
+  create: (data: any) => apiClient.post('/admin/categories', data),
+  update: (id: string, data: any) => apiClient.put(`/admin/categories/${id}`, data),
+  delete: (id: string) => apiClient.delete(`/admin/categories/${id}`),
+  initialize: () => apiClient.post('/admin/categories/initialize', {}),
 };
 
 export const authService = {

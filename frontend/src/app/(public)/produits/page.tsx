@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { Navigation } from '@/components/public/Navigation';
+import { Footer } from '@/components/public/Footer';
 import ProductGrid from '@/components/public/ProductGrid';
 import Pagination from '@/components/ui/Pagination';
 import { SkeletonGrid } from '@/components/ui/LoadingSkeleton';
@@ -18,9 +20,11 @@ export default function ProduitsPage() {
   // State
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
+  const [mounted, setMounted] = useState(false);
   
   // Filters from URL
   const [filters, setFilters] = useState<ProductFilters>({
@@ -31,16 +35,27 @@ export default function ProduitsPage() {
   const [sortBy, setSortBy] = useState(searchParams.get('sort') || 'newest');
   const [searchInput, setSearchInput] = useState(filters.search || '');
 
+  // Fix SSR hydration by only rendering on client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   // Fetch products
   const fetchProducts = useCallback(async () => {
     setLoading(true);
+    setError(null);
     try {
       const response = await getProducts(currentPage, 12, filters, sortBy);
-      setProducts(response.data);
-      setTotalPages(response.pagination.pages);
-      setTotal(response.pagination.total);
-    } catch (error) {
-      console.error('Error fetching products:', error);
+      
+      if (!response.success) {
+        setError('Impossible de charger les produits. Veuillez réessayer.');
+      }
+      
+      setProducts(response.data || []);
+      setTotalPages(response.pagination?.pages || 1);
+      setTotal(response.pagination?.total || 0);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue lors du chargement des produits');
       setProducts([]);
     } finally {
       setLoading(false);
@@ -49,8 +64,9 @@ export default function ProduitsPage() {
 
   // Fetch products when dependencies change
   useEffect(() => {
+    if (!mounted) return; // Only fetch on client side
     fetchProducts();
-  }, [fetchProducts]);
+  }, [fetchProducts, mounted]);
 
   // Update URL when filters change
   const updateURL = useCallback(() => {
@@ -80,11 +96,17 @@ export default function ProduitsPage() {
   // Handle search
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    setFilters(prev => ({
-      ...prev,
-      search: searchInput || undefined,
-    }));
-    setCurrentPage(1);
+    const trimmed = searchInput.trim();
+    
+    // Only apply search if empty or at least 2 characters
+    if (trimmed.length === 0 || trimmed.length >= 2) {
+      setFilters(prev => ({
+        ...prev,
+        search: trimmed || undefined,
+      }));
+      setCurrentPage(1);
+    }
+    // If 1 character, do nothing (keep current filters)
   };
 
   // Handle sort change
@@ -109,8 +131,22 @@ export default function ProduitsPage() {
 
   const hasActiveFilters = filters.category || filters.search;
 
+  // Show loading state during SSR/mounting
+  if (!mounted) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
+      <Navigation />
+      
       {/* Hero Section */}
       <section className="relative py-24 bg-gradient-wood text-white" role="banner">
         <div className="container">
@@ -201,19 +237,27 @@ export default function ProduitsPage() {
             <div className="flex gap-4 flex-1 lg:flex-initial">
               <form onSubmit={handleSearch} className="flex gap-2 flex-1 lg:w-64" role="search">
                 <label htmlFor="product-search" className="sr-only">Rechercher des produits</label>
-                <input
-                  id="product-search"
-                  type="search"
-                  placeholder="Rechercher..."
-                  value={searchInput}
-                  onChange={(e) => setSearchInput(e.target.value)}
-                  className="input flex-1 focus-visible-enhanced"
-                  aria-label="Rechercher des produits"
-                />
+                <div className="relative flex-1">
+                  <input
+                    id="product-search"
+                    type="search"
+                    placeholder="Rechercher... (min 2 car.)"
+                    value={searchInput}
+                    onChange={(e) => setSearchInput(e.target.value)}
+                    className="input w-full focus-visible-enhanced"
+                    aria-label="Rechercher des produits"
+                  />
+                  {searchInput && searchInput.trim().length === 1 && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-red-600 bg-white px-1">
+                      Min 2
+                    </div>
+                  )}
+                </div>
                 <button 
                   type="submit" 
                   className="btn-primary px-4 focus-visible-enhanced"
                   aria-label="Lancer la recherche"
+                  disabled={searchInput.trim().length === 1}
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -283,6 +327,30 @@ export default function ProduitsPage() {
       {/* Products Grid */}
       <section className="section" aria-label="Liste des produits">
         <div className="container">
+          {/* Error Message */}
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-red-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div className="flex-1">
+                  <h3 className="text-sm font-medium text-red-800 mb-1">Erreur de chargement</h3>
+                  <p className="text-sm text-red-700">{error}</p>
+                  <p className="text-sm text-red-600 mt-2">
+                    Vérifiez que le backend est démarré sur <code className="bg-red-100 px-1 rounded">http://localhost:5000</code>
+                  </p>
+                  <button
+                    onClick={() => fetchProducts()}
+                    className="mt-3 text-sm text-red-700 font-medium hover:text-red-800 underline"
+                  >
+                    Réessayer
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          
           {/* Results Count */}
           <div className="mb-6">
             <p className="text-neutral-600" role="status" aria-live="polite" aria-atomic="true">
@@ -333,6 +401,8 @@ export default function ProduitsPage() {
           </a>
         </div>
       </section>
+      
+      <Footer />
     </div>
   );
 }
