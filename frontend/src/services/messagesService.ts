@@ -158,6 +158,14 @@ export const messagesService = {
     const response = await apiClient.post(`/admin/messages/${id}/notes`, { text });
     return response;
   },
+
+  /**
+   * Reply to a message by email
+   */
+  async replyByEmail(id: string, replyText: string): Promise<{ success: boolean; message: string; data: Message }> {
+    const response = await apiClient.post(`/admin/messages/${id}/reply`, { replyText });
+    return response;
+  },
 };
 
 /**

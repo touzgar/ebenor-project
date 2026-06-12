@@ -162,8 +162,9 @@ export class CloudinaryService {
   /**
    * Generate thumbnail URL
    */
-  public getThumbnailUrl(publicId: string, width: number = 300, height: number = 300): string {
+  public getThumbnailUrl(publicId: string, width: number = 300, height: number = 300, resourceType: 'image' | 'video' = 'image'): string {
     return cloudinary.url(publicId, {
+      resource_type: resourceType,
       transformation: [
         { width, height, crop: 'fill', gravity: 'auto' },
         { quality: 'auto', fetch_format: 'auto' },

@@ -70,12 +70,16 @@ export interface Product {
   description: string;
   shortDescription: string;
   category: string;
-  subcategory?: string;
   images: Array<{
     url: string;
     alt: string;
     isPrimary: boolean;
   }>;
+  video?: {
+    url: string;
+    publicId?: string;
+    thumbnail?: string;
+  };
   specifications: Record<string, string>;
   dimensions?: {
     length?: number;
@@ -179,8 +183,12 @@ export interface ProductFormData {
   description: string;
   shortDescription: string;
   category: string;
-  subcategory?: string;
   specifications?: Record<string, string>;
+  video?: {
+    url: string;
+    publicId?: string;
+    thumbnail?: string;
+  };
   dimensions?: {
     length?: number;
     width?: number;

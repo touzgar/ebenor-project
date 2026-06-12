@@ -6,6 +6,7 @@ import { AdminNavigation } from '@/components/admin/AdminNavigation';
 import { Breadcrumb } from '@/components/admin/Breadcrumb';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardProvider } from '@/contexts/DashboardContext';
+import { Toaster } from 'react-hot-toast';
 
 interface AdminLayoutProps {
   children: ReactNode;
@@ -54,6 +55,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <DashboardProvider>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#363636',
+            color: '#fff',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#C9A14A',
+              secondary: '#fff',
+            },
+          },
+        }}
+      />
       <div className="min-h-screen bg-neutral-50">
         <AdminNavigation />
         

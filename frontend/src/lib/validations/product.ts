@@ -158,13 +158,6 @@ export const productFormSchema = z.object({
 
   category: z.string().min(1, 'La catégorie est requise'),
 
-  subcategory: z
-    .string()
-    .max(100, 'La sous-catégorie ne peut pas dépasser 100 caractères')
-    .trim()
-    .optional()
-    .or(z.literal('')),
-
   // Descriptions
   shortDescription: z
     .string()
@@ -324,7 +317,6 @@ export function productFormToApiPayload(
   return {
     ...formData,
     // Convert empty strings to undefined for optional fields
-    subcategory: formData.subcategory || undefined,
     seoTitle: formData.seoTitle || undefined,
     seoDescription: formData.seoDescription || undefined,
     // Ensure proper structure for nested objects

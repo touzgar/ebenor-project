@@ -73,4 +73,11 @@ router.put('/:id/priority', validateObjectIdParam('id'), validatePriority, messa
  */
 router.post('/:id/notes', validateObjectIdParam('id'), validateNote, messageController.addNote);
 
+/**
+ * @route   POST /api/admin/messages/:id/reply
+ * @desc    Répondre à un message par email
+ * @access  Private (Admin)
+ */
+router.post('/:id/reply', validateObjectIdParam('id'), messageController.replyByEmail);
+
 export default router;

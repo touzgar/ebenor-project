@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/hooks/useAuth';
+import { messagesService } from '@/services/messagesService';
 
 interface NavItem {
   name: string;
@@ -18,6 +19,27 @@ export function AdminNavigation() {
   const pathname = usePathname();
   const { user, logout } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState<number>(0);
+
+  // Fetch unread message count
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      try {
+        const stats = await messagesService.getMessageStats();
+        if (stats.success) {
+          setUnreadCount(stats.data.newMessages);
+        }
+      } catch (error) {
+        console.error('Error fetching message stats:', error);
+      }
+    };
+
+    fetchUnreadCount();
+    
+    // Refresh every 30 seconds
+    const interval = setInterval(fetchUnreadCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const navigation: NavItem[] = [
     {
@@ -73,7 +95,7 @@ export function AdminNavigation() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
         </svg>
       ),
-      badge: 3,
+      badge: unreadCount > 0 ? unreadCount : undefined,
     },
   ];
 

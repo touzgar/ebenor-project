@@ -3,6 +3,7 @@ import { Message } from '../models/Message';
 import { ApiError, ERROR_CODES } from '../middleware/errorHandler';
 import { ApiResponse, PaginatedResponse } from '../types';
 import { logger } from '../utils/logger';
+import { emailService } from '../services/emailService';
 
 export class MessageController {
   /**
@@ -87,9 +88,10 @@ export class MessageController {
         }
       }
 
-      // Recherche textuelle
+      // Recherche textuelle (nom uniquement)
       if (req.query.search) {
-        filters.$text = { $search: req.query.search };
+        const searchTerm = req.query.search as string;
+        filters.name = { $regex: searchTerm, $options: 'i' };
       }
 
       // Tri
@@ -431,6 +433,67 @@ export class MessageController {
       const response: ApiResponse = {
         success: true,
         data: messages,
+      };
+
+      res.status(200).json(response);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
+   * Répondre à un message par email (route admin)
+   */
+  public async replyByEmail(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { id } = req.params;
+      const { replyText } = req.body;
+
+      if (!replyText || replyText.trim().length === 0) {
+        throw new ApiError(
+          'Le texte de la réponse est requis',
+          400,
+          ERROR_CODES.VALIDATION_ERROR
+        );
+      }
+
+      const message = await Message.findById(id);
+
+      if (!message) {
+        throw new ApiError(
+          'Message non trouvé',
+          404,
+          ERROR_CODES.NOT_FOUND
+        );
+      }
+
+      // Send email reply
+      const subject = `Re: ${message.subject}`;
+      const emailSent = await emailService.sendReplyEmail(
+        message.email,
+        subject,
+        message.message,
+        replyText.trim()
+      );
+
+      if (!emailSent) {
+        throw new ApiError(
+          'Erreur lors de l\'envoi de l\'email. Vérifiez la configuration SMTP.',
+          500,
+          ERROR_CODES.INTERNAL_ERROR
+        );
+      }
+
+      // Mark as replied
+      const userId = (req as any).user?.id || 'admin';
+      await message.markAsReplied(userId);
+
+      logger.info(`Email reply sent to ${message.email} for message ${id}`);
+
+      const response: ApiResponse = {
+        success: true,
+        message: 'Réponse envoyée avec succès',
+        data: message,
       };
 
       res.status(200).json(response);

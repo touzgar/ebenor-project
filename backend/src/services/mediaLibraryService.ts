@@ -124,7 +124,7 @@ export class MediaLibraryService {
       if (product.images && product.images.length > 0) {
         for (const image of product.images) {
           const mediaItem: MediaItem = {
-            id: `product-${product._id}-${image.url}`,
+            id: `product-${product._id}-img-${image.url}`,
             url: image.url,
             thumbnailUrl: this.extractThumbnailUrl(image.url),
             filename: this.extractFilename(image.url),
@@ -149,6 +149,36 @@ export class MediaLibraryService {
           if (!filters.type || filters.type === 'image') {
             mediaItems.push(mediaItem);
           }
+        }
+      }
+
+      // Process product video
+      if (product.video && product.video.url) {
+        const mediaItem: MediaItem = {
+          id: `product-${product._id}-video-${product.video.url}`,
+          url: product.video.url,
+          thumbnailUrl: product.video.thumbnail || this.extractThumbnailUrl(product.video.url),
+          filename: this.extractFilename(product.video.url),
+          type: 'video',
+          size: 0, // Size not stored in product videos
+          category: product.category,
+          tags: product.tags,
+          uploadedAt: product.createdAt || new Date(),
+          source: 'product',
+          sourceId: product._id!.toString(),
+          references: [
+            {
+              type: 'product',
+              id: product._id!.toString(),
+              name: product.name,
+              field: 'video',
+            },
+          ],
+        };
+
+        // Apply type filter
+        if (!filters.type || filters.type === 'video') {
+          mediaItems.push(mediaItem);
         }
       }
     }
@@ -353,17 +383,31 @@ export class MediaLibraryService {
     try {
       const references: MediaReference[] = [];
 
-      // Search in products
-      const products = await Product.find({
+      // Search in products for images
+      const productsWithImages = await Product.find({
         'images.url': url,
       }).lean();
 
-      products.forEach((product) => {
+      productsWithImages.forEach((product) => {
         references.push({
           type: 'product',
           id: product._id!.toString(),
           name: product.name,
           field: 'images',
+        });
+      });
+
+      // Search in products for videos
+      const productsWithVideos = await Product.find({
+        'video.url': url,
+      }).lean();
+
+      productsWithVideos.forEach((product) => {
+        references.push({
+          type: 'product',
+          id: product._id!.toString(),
+          name: product.name,
+          field: 'video',
         });
       });
 
@@ -447,19 +491,29 @@ export class MediaLibraryService {
       }
 
       // 2. Delete from Products (remove image from images array)
-      const products = await Product.find({ 'images.url': url });
-      for (const product of products) {
+      const productsWithImages = await Product.find({ 'images.url': url });
+      for (const product of productsWithImages) {
         product.images = product.images.filter(img => img.url !== url);
         await product.save();
         logger.info('Removed image from Product', { productId: product._id, url });
       }
 
-      // 3. Extract public ID from Cloudinary URL and delete from cloud
+      // 3. Delete from Products (remove video)
+      const productsWithVideos = await Product.find({ 'video.url': url });
+      for (const product of productsWithVideos) {
+        product.video = undefined;
+        await product.save();
+        logger.info('Removed video from Product', { productId: product._id, url });
+      }
+
+      // 4. Extract public ID from Cloudinary URL and delete from cloud
       const publicId = this.extractPublicId(url);
       if (publicId) {
         try {
-          await cloudinaryService.deleteFile(publicId);
-          logger.info('Media deleted from Cloudinary', { url, publicId });
+          // Detect if it's a video or image
+          const isVideo = this.detectMediaType(url) === 'video';
+          await cloudinaryService.deleteFile(publicId, isVideo ? 'video' : 'image');
+          logger.info(`Media deleted from Cloudinary (${isVideo ? 'video' : 'image'})`, { url, publicId });
         } catch (cloudError) {
           logger.warn('Failed to delete from Cloudinary (may not exist)', { url, error: cloudError });
         }
@@ -585,15 +639,26 @@ export class MediaLibraryService {
       const references = await this.findMediaReferences(oldUrl);
       let updateCount = 0;
 
-      // Update products
-      const productRefs = references.filter((ref) => ref.type === 'product');
-      for (const ref of productRefs) {
+      // Update products with images
+      const productImageRefs = references.filter((ref) => ref.type === 'product' && ref.field === 'images');
+      for (const ref of productImageRefs) {
         const product = await Product.findById(ref.id);
         if (product) {
           product.images = product.images.map((img) => ({
             ...img,
             url: img.url === oldUrl ? newUrl : img.url,
           }));
+          await product.save();
+          updateCount++;
+        }
+      }
+
+      // Update products with videos
+      const productVideoRefs = references.filter((ref) => ref.type === 'product' && ref.field === 'video');
+      for (const ref of productVideoRefs) {
+        const product = await Product.findById(ref.id);
+        if (product && product.video) {
+          product.video.url = newUrl;
           await product.save();
           updateCount++;
         }
@@ -644,8 +709,9 @@ export class MediaLibraryService {
       const oldPublicId = this.extractPublicId(oldUrl);
       if (oldPublicId) {
         try {
-          await cloudinaryService.deleteFile(oldPublicId);
-          logger.info('Old media deleted from Cloudinary', { oldUrl, oldPublicId });
+          const isVideo = this.detectMediaType(oldUrl) === 'video';
+          await cloudinaryService.deleteFile(oldPublicId, isVideo ? 'video' : 'image');
+          logger.info(`Old media deleted from Cloudinary (${isVideo ? 'video' : 'image'})`, { oldUrl, oldPublicId });
         } catch (error) {
           logger.warn('Failed to delete old media from Cloudinary', { error, oldUrl });
         }
@@ -685,7 +751,8 @@ export class MediaLibraryService {
     if (url.includes('cloudinary.com')) {
       const publicId = this.extractPublicId(url);
       if (publicId) {
-        return cloudinaryService.getThumbnailUrl(publicId, 300, 300);
+        const isVideo = this.detectMediaType(url) === 'video';
+        return cloudinaryService.getThumbnailUrl(publicId, 300, 300, isVideo ? 'video' : 'image');
       }
     }
     return url;
@@ -696,8 +763,11 @@ export class MediaLibraryService {
    */
   private extractPublicId(url: string): string | null {
     try {
+      // Remove query parameters first
+      const cleanUrl = url.split('?')[0];
+      
       // Cloudinary URL format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/v{version}/{public_id}.{format}
-      const match = url.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/);
+      const match = cleanUrl.match(/\/upload\/(?:v\d+\/)?(.+)\.\w+$/);
       return match ? match[1] : null;
     } catch {
       return null;
@@ -708,9 +778,20 @@ export class MediaLibraryService {
    * Detect media type from URL
    */
   private detectMediaType(url: string): 'image' | 'video' {
-    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi'];
     const lowerUrl = url.toLowerCase();
-    return videoExtensions.some((ext) => lowerUrl.endsWith(ext)) ? 'video' : 'image';
+    
+    // Check for Cloudinary video resource type in URL path
+    if (lowerUrl.includes('/video/upload/')) {
+      return 'video';
+    }
+    
+    // Check for video file extensions anywhere in the URL (not just at the end)
+    const videoExtensions = ['.mp4', '.webm', '.mov', '.avi', '.mkv', '.flv', '.wmv'];
+    if (videoExtensions.some((ext) => lowerUrl.includes(ext))) {
+      return 'video';
+    }
+    
+    return 'image';
   }
 }
 

@@ -32,16 +32,16 @@ const ProductSchema = new Schema<ProductDocument>({
     required: true,
     lowercase: true
   },
-  subcategory: { 
-    type: String, 
-    maxlength: 100,
-    lowercase: true
-  },
   images: [{
     url: { type: String, required: true },
     alt: { type: String, default: '', maxlength: 200 },
     isPrimary: { type: Boolean, default: false }
   }],
+  video: {
+    url: { type: String },
+    publicId: { type: String },
+    thumbnail: { type: String }
+  },
   specifications: {
     type: Map,
     of: String,

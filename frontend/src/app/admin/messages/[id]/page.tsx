@@ -27,6 +27,9 @@ export default function MessageDetailPage() {
   const [isUpdating, setIsUpdating] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [isAddingNote, setIsAddingNote] = useState(false);
+  const [showReplyModal, setShowReplyModal] = useState(false);
+  const [replyText, setReplyText] = useState('');
+  const [isSendingReply, setIsSendingReply] = useState(false);
 
   useEffect(() => {
     loadMessage();
@@ -141,11 +144,31 @@ export default function MessageDetailPage() {
 
   const handleReplyByEmail = () => {
     if (!message) return;
-    
-    const subject = `Re: ${message.subject}`;
-    const body = `\n\n---\nMessage original de ${message.name} (${formatDate(message.createdAt)}):\n${message.message}`;
-    
-    window.location.href = `mailto:${message.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    setShowReplyModal(true);
+  };
+
+  const handleSendReply = async () => {
+    if (!message || !replyText.trim()) {
+      alert('Veuillez saisir votre réponse');
+      return;
+    }
+
+    try {
+      setIsSendingReply(true);
+      const response = await messagesService.replyByEmail(id, replyText.trim());
+
+      if (response.success) {
+        setMessage(response.data);
+        setShowReplyModal(false);
+        setReplyText('');
+        alert('Réponse envoyée avec succès par email');
+      }
+    } catch (err: any) {
+      console.error('Error sending reply:', err);
+      alert(err.message || 'Erreur lors de l\'envoi de la réponse');
+    } finally {
+      setIsSendingReply(false);
+    }
   };
 
   if (isLoading) {
@@ -363,40 +386,114 @@ export default function MessageDetailPage() {
                 )}
               </div>
             </motion.div>
-
-            {/* Technical Info */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-white rounded-lg shadow-sm p-6"
-            >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Informations techniques</h3>
-              
-              <div className="space-y-2 text-sm">
-                {message.ipAddress && (
-                  <div>
-                    <span className="font-medium text-gray-700">IP :</span>
-                    <span className="ml-2 text-gray-600">{message.ipAddress}</span>
-                  </div>
-                )}
-                
-                {message.userAgent && (
-                  <div>
-                    <span className="font-medium text-gray-700">Navigateur :</span>
-                    <p className="text-gray-600 text-xs mt-1 break-all">{message.userAgent}</p>
-                  </div>
-                )}
-                
-                <div>
-                  <span className="font-medium text-gray-700">ID :</span>
-                  <span className="ml-2 text-gray-600 text-xs">{message._id}</span>
-                </div>
-              </div>
-            </motion.div>
           </div>
         </div>
       </div>
+
+      {/* Reply Modal */}
+      {showReplyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+          >
+            {/* Modal Header */}
+            <div className="bg-[#C9A14A] px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Répondre par email</h2>
+              <button
+                onClick={() => setShowReplyModal(false)}
+                className="text-white hover:text-gray-200 transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 max-h-[calc(90vh-160px)] overflow-y-auto">
+              {/* Recipient Info */}
+              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center text-sm text-gray-600 mb-1">
+                  <span className="font-medium">À :</span>
+                  <span className="ml-2">{message?.name} ({message?.email})</span>
+                </div>
+                <div className="flex items-center text-sm text-gray-600">
+                  <span className="font-medium">Sujet :</span>
+                  <span className="ml-2">Re: {message?.subject}</span>
+                </div>
+              </div>
+
+              {/* Original Message */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Message original :
+                </label>
+                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-[#C9A14A]">
+                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{message?.message}</p>
+                  <p className="text-xs text-gray-500 mt-2">
+                    De {message?.name} le {message && formatDate(message.createdAt)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Reply Text */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Votre réponse :
+                </label>
+                <textarea
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  placeholder="Écrivez votre réponse ici..."
+                  rows={8}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A14A] focus:border-transparent resize-none"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  Cette réponse sera envoyée par email à {message?.email}
+                </p>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowReplyModal(false);
+                  setReplyText('');
+                }}
+                disabled={isSendingReply}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSendReply}
+                disabled={isSendingReply || !replyText.trim()}
+                className="px-6 py-2 bg-[#C9A14A] text-white rounded-lg hover:bg-[#B8903A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                {isSendingReply ? (
+                  <>
+                    <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Envoi en cours...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    Envoyer la réponse
+                  </>
+                )}
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
+import { useColumnVisibility } from '@/hooks/useColumnVisibility';
 import { toast } from '@/lib/toast';
 import { productsService, categoryService } from '@/lib/api';
 import { triggerDashboardRefresh } from '@/lib/dashboardRefresh';
 import type { Product } from '@/types';
+import ColumnVisibilityMenu from '@/components/admin/ColumnVisibilityMenu';
+import type { Column } from '@/components/admin/ColumnVisibilityMenu';
 import {
   PlusIcon,
   PencilIcon,
@@ -50,6 +53,28 @@ export default function ProductsListPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingProduct, setDeletingProduct] = useState<Product | null>(null);
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Define table columns
+  const tableColumns: Column[] = [
+    { id: 'image', label: 'Image', isEssential: true, defaultVisible: true },
+    { id: 'product', label: 'Produit', isEssential: true, defaultVisible: true },
+    { id: 'category', label: 'Catégorie', defaultVisible: true },
+    { id: 'price', label: 'Prix', defaultVisible: true },
+    { id: 'availability', label: 'Disponibilité', defaultVisible: true },
+    { id: 'featured', label: 'Vedette', defaultVisible: true },
+    { id: 'video', label: 'Vidéo', defaultVisible: false },
+    { id: 'materials', label: 'Matériaux', defaultVisible: false },
+    { id: 'dimensions', label: 'Dimensions', defaultVisible: false },
+    { id: 'tags', label: 'Tags', defaultVisible: false },
+    { id: 'created', label: 'Date de création', defaultVisible: false },
+    { id: 'actions', label: 'Actions', isEssential: true, defaultVisible: true },
+  ];
+
+  // Column visibility management
+  const { visibleColumns, setVisibleColumns, isColumnVisible } = useColumnVisibility({
+    columns: tableColumns,
+    storageKey: 'products-table-columns',
+  });
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -166,6 +191,24 @@ export default function ProductsListPage() {
     return `${price.amount.toLocaleString()} ${price.currency}${price.unit ? `/${price.unit}` : ''}`;
   };
 
+  const formatDimensions = (dimensions?: { length?: number; width?: number; height?: number; unit?: string }) => {
+    if (!dimensions) return '-';
+    const { length, width, height, unit = 'cm' } = dimensions;
+    if (length && width && height) {
+      return `${length}×${width}×${height} ${unit}`;
+    }
+    return '-';
+  };
+
+  const formatDate = (date?: string) => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
+
   const getAvailabilityBadge = (availability: string) => {
     const badges = {
       in_stock: { label: 'En stock', color: 'bg-green-100 text-green-800' },
@@ -264,7 +307,7 @@ export default function ProductsListPage() {
 
         {/* Filters */}
         <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <select
                 value={categoryFilter}
@@ -313,28 +356,16 @@ export default function ProductsListPage() {
                 <option value="false">Non en vedette</option>
               </select>
             </div>
-
-            <div className="flex items-center">
-              <button
-                onClick={() => {
-                  setSearchQuery('');
-                  setCategoryFilter('');
-                  setAvailabilityFilter('');
-                  setFeaturedFilter('');
-                  setCurrentPage(1);
-                }}
-                className="px-4 py-2 text-sm bg-neutral-100 text-neutral-700 rounded-lg hover:bg-neutral-200 transition-colors"
-              >
-                Réinitialiser les filtres
-              </button>
-            </div>
           </div>
         </div>
 
         {/* Products Table */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto mb-4"></div>
+              <p className="text-sm text-neutral-600">Chargement des produits...</p>
+            </div>
           </div>
         ) : products.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm p-12 text-center">
@@ -348,7 +379,7 @@ export default function ProductsListPage() {
             {!searchQuery && !categoryFilter && !availabilityFilter && !featuredFilter && (
               <Link
                 href="/admin/products/new"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors"
+                className="inline-flex items-center gap-2 px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors shadow-lg hover:shadow-xl"
               >
                 <PlusIcon className="h-5 w-5" />
                 Créer un produit
@@ -357,31 +388,122 @@ export default function ProductsListPage() {
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+            {/* Table Header with Column Controls */}
+            <div className="px-6 py-4 bg-gradient-to-r from-neutral-50 via-amber-50/30 to-neutral-50 border-b border-neutral-200">
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-2 bg-white rounded-lg border border-neutral-200 shadow-sm">
+                    <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 0a2 2 0 012 2v6a2 2 0 01-2 2m0-8a2 2 0 012 2v6a2 2 0 01-2 2m-6 4a2 2 0 002 2h2a2 2 0 002-2m0 0V7m0 10v2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-neutral-900">
+                      Liste des produits
+                    </h3>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      {products.length} produit{products.length > 1 ? 's' : ''} • {visibleColumns.length} colonne{visibleColumns.length > 1 ? 's' : ''} visible{visibleColumns.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+                
+                {/* Column Visibility Menu in Table Header */}
+                <ColumnVisibilityMenu
+                  columns={tableColumns}
+                  visibleColumns={visibleColumns}
+                  onVisibilityChange={setVisibleColumns}
+                  storageKey="products-table-columns"
+                />
+              </div>
+            </div>
+
+            {/* Info banner when columns are hidden */}
+            {visibleColumns.length < tableColumns.length && (
+              <div className="px-6 py-3 bg-blue-50 border-b border-blue-100 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-sm text-blue-700">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>
+                    {tableColumns.length - visibleColumns.length} colonne{tableColumns.length - visibleColumns.length > 1 ? 's' : ''} masquée{tableColumns.length - visibleColumns.length > 1 ? 's' : ''}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    const allColumns = tableColumns.map(col => col.id);
+                    setVisibleColumns(allColumns);
+                  }}
+                  className="text-xs font-medium text-blue-700 hover:text-blue-900 underline"
+                >
+                  Afficher tout
+                </button>
+              </div>
+            )}
+            
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-neutral-200">
                 <thead className="bg-neutral-50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Image
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Produit
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Catégorie
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Prix
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Disponibilité
-                    </th>
-                    <th className="px-6 py-4 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Vedette
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
-                      Actions
-                    </th>
+                    {isColumnVisible('image') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Image
+                      </th>
+                    )}
+                    {isColumnVisible('product') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Produit
+                      </th>
+                    )}
+                    {isColumnVisible('category') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Catégorie
+                      </th>
+                    )}
+                    {isColumnVisible('price') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Prix
+                      </th>
+                    )}
+                    {isColumnVisible('availability') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Disponibilité
+                      </th>
+                    )}
+                    {isColumnVisible('featured') && (
+                      <th className="px-6 py-4 text-center text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Vedette
+                      </th>
+                    )}
+                    {isColumnVisible('video') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Vidéo
+                      </th>
+                    )}
+                    {isColumnVisible('materials') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Matériaux
+                      </th>
+                    )}
+                    {isColumnVisible('dimensions') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Dimensions
+                      </th>
+                    )}
+                    {isColumnVisible('tags') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Tags
+                      </th>
+                    )}
+                    {isColumnVisible('created') && (
+                      <th className="px-6 py-4 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Date de création
+                      </th>
+                    )}
+                    {isColumnVisible('actions') && (
+                      <th className="px-6 py-4 text-right text-xs font-medium text-neutral-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    )}
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-neutral-200">
@@ -391,73 +513,176 @@ export default function ProductsListPage() {
 
                     return (
                       <tr key={product._id} className="hover:bg-neutral-50 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-100">
-                            {primaryImage ? (
-                              <Image
-                                src={primaryImage.url}
-                                alt={primaryImage.alt}
-                                fill
-                                className="object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <CubeIcon className="h-8 w-8 text-neutral-400" />
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div>
-                            <div className="text-sm font-medium text-neutral-900">{product.name}</div>
-                            <div className="text-xs text-neutral-500 truncate max-w-xs">
-                              {product.shortDescription}
+                        {isColumnVisible('image') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-neutral-100">
+                              {primaryImage ? (
+                                <Image
+                                  src={primaryImage.url}
+                                  alt={primaryImage.alt}
+                                  fill
+                                  className="object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <CubeIcon className="h-8 w-8 text-neutral-400" />
+                                </div>
+                              )}
                             </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
-                            {categories.find(cat => cat.slug === product.category)?.name || product.category}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className="text-sm font-medium text-amber-600">
-                            {formatPrice(product.price)}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
-                            {badge.label}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-center">
-                          {product.featured ? (
-                            <StarIcon className="h-5 w-5 text-yellow-500 mx-auto fill-current" />
-                          ) : (
-                            <span className="text-neutral-300">-</span>
-                          )}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <div className="flex items-center justify-end gap-2">
-                            <Link
-                              href={`/admin/products/${product._id}/edit`}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                              title="Modifier"
-                            >
-                              <PencilIcon className="h-5 w-5" />
-                            </Link>
-                            <button
-                              onClick={() => {
-                                setDeletingProduct(product);
-                                setShowDeleteModal(true);
-                              }}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                              title="Supprimer"
-                            >
-                              <TrashIcon className="h-5 w-5" />
-                            </button>
-                          </div>
-                        </td>
+                          </td>
+                        )}
+                        {isColumnVisible('product') && (
+                          <td className="px-6 py-4">
+                            <div>
+                              <div className="text-sm font-medium text-neutral-900">{product.name}</div>
+                              <div className="text-xs text-neutral-500 truncate max-w-xs">
+                                {product.shortDescription}
+                              </div>
+                            </div>
+                          </td>
+                        )}
+                        {isColumnVisible('category') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-neutral-100 text-neutral-800">
+                              {categories.find(cat => cat.slug === product.category)?.name || product.category}
+                            </span>
+                          </td>
+                        )}
+                        {isColumnVisible('price') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm font-medium text-amber-600">
+                              {formatPrice(product.price)}
+                            </span>
+                          </td>
+                        )}
+                        {isColumnVisible('availability') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+                              {badge.label}
+                            </span>
+                          </td>
+                        )}
+                        {isColumnVisible('featured') && (
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            {product.featured ? (
+                              <StarIcon className="h-5 w-5 text-yellow-500 mx-auto fill-current" />
+                            ) : (
+                              <span className="text-neutral-300">-</span>
+                            )}
+                          </td>
+                        )}
+                        {isColumnVisible('video') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            {product.video ? (
+                              <div className="relative w-20 h-12 rounded overflow-hidden bg-neutral-100 group">
+                                {product.video.thumbnail ? (
+                                  <img
+                                    src={product.video.thumbnail}
+                                    alt="Video thumbnail"
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <video
+                                    src={product.video.url}
+                                    className="w-full h-full object-cover"
+                                    muted
+                                  />
+                                )}
+                                {/* Play icon overlay */}
+                                <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
+                                  <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M8 5v14l11-7z" />
+                                  </svg>
+                                </div>
+                              </div>
+                            ) : (
+                              <span className="text-xs text-neutral-400">-</span>
+                            )}
+                          </td>
+                        )}
+                        {isColumnVisible('materials') && (
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {product.materials && product.materials.length > 0 ? (
+                                product.materials.slice(0, 3).map((material, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                                  >
+                                    {material}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs text-neutral-400">-</span>
+                              )}
+                              {product.materials && product.materials.length > 3 && (
+                                <span className="text-xs text-neutral-500">
+                                  +{product.materials.length - 3}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                        {isColumnVisible('dimensions') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-neutral-700">
+                              {formatDimensions(product.dimensions)}
+                            </span>
+                          </td>
+                        )}
+                        {isColumnVisible('tags') && (
+                          <td className="px-6 py-4">
+                            <div className="flex flex-wrap gap-1 max-w-xs">
+                              {product.tags && product.tags.length > 0 ? (
+                                product.tags.slice(0, 2).map((tag, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800"
+                                  >
+                                    {tag}
+                                  </span>
+                                ))
+                              ) : (
+                                <span className="text-xs text-neutral-400">-</span>
+                              )}
+                              {product.tags && product.tags.length > 2 && (
+                                <span className="text-xs text-neutral-500">
+                                  +{product.tags.length - 2}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        )}
+                        {isColumnVisible('created') && (
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="text-sm text-neutral-700">
+                              {formatDate(product.createdAt)}
+                            </span>
+                          </td>
+                        )}
+                        {isColumnVisible('actions') && (
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <Link
+                                href={`/admin/products/${product._id}/edit`}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                                title="Modifier"
+                              >
+                                <PencilIcon className="h-5 w-5" />
+                              </Link>
+                              <button
+                                onClick={() => {
+                                  setDeletingProduct(product);
+                                  setShowDeleteModal(true);
+                                }}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Supprimer"
+                              >
+                                <TrashIcon className="h-5 w-5" />
+                              </button>
+                            </div>
+                          </td>
+                        )}
                       </tr>
                     );
                   })}

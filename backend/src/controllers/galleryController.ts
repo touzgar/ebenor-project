@@ -629,6 +629,23 @@ export class GalleryController {
     try {
       const { action, imageIds, data } = req.body;
 
+      // Special case: deleteAll doesn't need imageIds
+      if (action === 'deleteAll') {
+        const result = await GalleryImage.deleteMany({});
+        logger.info('Delete ALL gallery images', { 
+          count: result.deletedCount,
+          deletedBy: req.user?.email || req.user?.id,
+        });
+
+        const response: ApiResponse = {
+          success: true,
+          data: { deletedCount: result.deletedCount },
+          message: `${result.deletedCount} image(s) supprimée(s) avec succès`,
+        };
+
+        return res.status(200).json(response);
+      }
+
       if (!action || !imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
         throw new ApiError(
           'Action et IDs d\'images requis',

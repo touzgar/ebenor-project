@@ -12,3 +12,5 @@ export { ProductVideoManager } from './ProductVideoManager';
 export type { ProductVideo } from './ProductVideoManager';
 export { DeleteConfirmModal } from './DeleteConfirmModal';
 export { SaveSuccessModal } from './SaveSuccessModal';
+export { default as ColumnVisibilityMenu } from './ColumnVisibilityMenu';
+export type { Column } from './ColumnVisibilityMenu';

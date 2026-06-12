@@ -553,7 +553,7 @@ export class ProductController {
         );
       }
 
-      // Find the product first to get its images
+      // Find the product first to get its images and video
       const product = await Product.findById(id);
 
       if (!product) {
@@ -564,58 +564,85 @@ export class ProductController {
         );
       }
 
-      // Extract all image URLs from the product
+      // Extract all image URLs and video URL from the product
       const imageUrls = product.images?.map((img: { url: string }) => img.url) || [];
+      const mediaUrls = [...imageUrls];
+      
+      // Add video URL if exists
+      if (product.video && product.video.url) {
+        mediaUrls.push(product.video.url);
+      }
 
-      // Delete the product
+      // Delete the product from database first
       await Product.findByIdAndDelete(id);
 
-      // Delete associated gallery images that match the product's image URLs
-      let deletedGalleryImagesCount = 0;
-      if (imageUrls.length > 0) {
+      // Delete associated gallery images that have matching URLs
+      let deletedGalleryCount = 0;
+      if (mediaUrls.length > 0) {
         const { GalleryImage } = await import('../models/GalleryImage');
+        const deleteResult = await GalleryImage.deleteMany({
+          url: { $in: mediaUrls }
+        });
+        deletedGalleryCount = deleteResult.deletedCount || 0;
+
+        if (deletedGalleryCount > 0) {
+          logger.info('Deleted gallery images matching product media', {
+            productId: id,
+            count: deletedGalleryCount,
+          });
+        }
+      }
+
+      // Delete associated media from Cloudinary
+      let deletedFromCloudinaryCount = 0;
+      if (mediaUrls.length > 0) {
         const { cloudinaryService } = await import('../services/cloudinaryService');
         
-        // Find gallery images to delete
-        const galleryImages = await GalleryImage.find({
-          url: { $in: imageUrls }
-        });
-
-        // Delete from database
-        const deleteResult = await GalleryImage.deleteMany({
-          url: { $in: imageUrls }
-        });
-        deletedGalleryImagesCount = deleteResult.deletedCount || 0;
-
-        // Delete from Cloudinary if available
-        for (const galleryImage of galleryImages) {
+        for (const url of mediaUrls) {
           try {
-            // Extract public_id from URL
-            const urlMatch = galleryImage.url.match(/\/([^/]+)\.(jpg|jpeg|png|webp|mp4|mov)$/i);
+            // Extract public ID from Cloudinary URL
+            // Cloudinary URL format: https://res.cloudinary.com/{cloud_name}/{resource_type}/upload/v{version}/{folder}/{public_id}.{extension}
+            const urlMatch = url.match(/\/upload\/(?:v\d+\/)?(.+?)\.(\w+)(?:\?|$)/);
+            
             if (urlMatch && urlMatch[1]) {
-              const publicId = `ebenor-creation/products/${urlMatch[1]}`;
-              await cloudinaryService.deleteFile(publicId, 'image');
-              logger.info('Deleted image from Cloudinary', {
-                publicId,
-                url: galleryImage.url
-              });
+              const publicIdWithFolder = urlMatch[1];
+              const extension = urlMatch[2].toLowerCase();
+              
+              // Determine if it's a video or image
+              const videoExtensions = ['mp4', 'mov', 'webm', 'avi', 'mkv', 'flv'];
+              const isVideo = videoExtensions.includes(extension) || url.includes('/video/upload/');
+              
+              // Try to delete from Cloudinary
+              try {
+                await cloudinaryService.deleteFile(publicIdWithFolder, isVideo ? 'video' : 'image');
+                deletedFromCloudinaryCount++;
+                logger.info(`Deleted ${isVideo ? 'video' : 'image'} from Cloudinary`, {
+                  publicId: publicIdWithFolder,
+                  url,
+                  productId: id,
+                });
+              } catch (cloudError: any) {
+                // If the error is "not found" (404), it's already deleted, so continue
+                if (cloudError.http_code === 404 || cloudError.message?.includes('not found')) {
+                  logger.info(`Media already deleted from Cloudinary`, {
+                    publicId: publicIdWithFolder,
+                    url,
+                  });
+                } else {
+                  logger.warn('Failed to delete media from Cloudinary', {
+                    publicId: publicIdWithFolder,
+                    url,
+                    error: cloudError,
+                  });
+                }
+              }
             }
-          } catch (cloudError) {
-            logger.warn('Failed to delete image from Cloudinary', {
-              url: galleryImage.url,
-              error: cloudError
+          } catch (parseError) {
+            logger.warn('Failed to parse media URL for deletion', {
+              url,
+              error: parseError,
             });
-            // Continue even if Cloudinary deletion fails
           }
-        }
-
-        if (deletedGalleryImagesCount > 0) {
-          logger.info('Deleted associated gallery images', {
-            productId: id,
-            productName: product.name,
-            imagesDeleted: deletedGalleryImagesCount,
-            urls: imageUrls,
-          });
         }
       }
 
@@ -623,18 +650,20 @@ export class ProductController {
         productId: id,
         name: product.name,
         deletedBy: req.user?.email || req.user?.id,
-        imagesCount: imageUrls.length,
-        galleryImagesDeleted: deletedGalleryImagesCount,
+        mediaCount: mediaUrls.length,
+        galleryImagesDeleted: deletedGalleryCount,
+        cloudinaryMediaDeleted: deletedFromCloudinaryCount,
       });
 
       const response: ApiResponse = {
         success: true,
         data: { 
           id,
-          deletedImagesCount: imageUrls.length,
-          deletedGalleryImagesCount
+          deletedMediaCount: mediaUrls.length,
+          deletedGalleryCount,
+          cloudinaryMediaDeleted: deletedFromCloudinaryCount,
         },
-        message: `Produit supprimé avec succès${deletedGalleryImagesCount > 0 ? ` (${deletedGalleryImagesCount} image(s) de galerie supprimée(s))` : ''}`,
+        message: `Produit supprimé avec succès (${deletedGalleryCount} image(s) galerie + ${deletedFromCloudinaryCount} média(s) Cloudinary supprimé(s))`,
       };
 
       res.status(200).json(response);
@@ -673,55 +702,79 @@ export class ProductController {
 
       switch (operation) {
         case 'delete':
-          // Find products first to get their image URLs
+          // Find products first to get their image and video URLs
           const productsToDelete = await Product.find({ _id: { $in: validIds } });
-          const allImageUrls: string[] = [];
+          const allMediaUrls: string[] = [];
           
           productsToDelete.forEach(product => {
+            // Add image URLs
             if (product.images && product.images.length > 0) {
-              product.images.forEach((img: { url: string }) => allImageUrls.push(img.url));
+              product.images.forEach((img: { url: string }) => allMediaUrls.push(img.url));
+            }
+            // Add video URL
+            if (product.video && product.video.url) {
+              allMediaUrls.push(product.video.url);
             }
           });
 
-          // Delete the products
+          // Delete the products from database
           result = await Product.deleteMany({ _id: { $in: validIds } });
           
           // Delete associated gallery images
-          if (allImageUrls.length > 0) {
+          let galleryDeletedCount = 0;
+          if (allMediaUrls.length > 0) {
             const { GalleryImage } = await import('../models/GalleryImage');
+            const galleryResult = await GalleryImage.deleteMany({
+              url: { $in: allMediaUrls }
+            });
+            galleryDeletedCount = galleryResult.deletedCount || 0;
+          }
+          
+          // Delete associated media from Cloudinary
+          let cloudinaryDeletedCount = 0;
+          if (allMediaUrls.length > 0) {
             const { cloudinaryService } = await import('../services/cloudinaryService');
             
-            // Find gallery images to delete
-            const galleryImages = await GalleryImage.find({
-              url: { $in: allImageUrls }
-            });
-
-            // Delete from database
-            const deleteImagesResult = await GalleryImage.deleteMany({
-              url: { $in: allImageUrls }
-            });
-            deletedImagesCount = deleteImagesResult.deletedCount || 0;
-
-            // Delete from Cloudinary
-            for (const galleryImage of galleryImages) {
+            for (const url of allMediaUrls) {
               try {
-                const urlMatch = galleryImage.url.match(/\/([^/]+)\.(jpg|jpeg|png|webp|mp4|mov)$/i);
+                // Extract public ID from Cloudinary URL
+                const urlMatch = url.match(/\/upload\/(?:v\d+\/)?(.+?)\.(\w+)(?:\?|$)/);
+                
                 if (urlMatch && urlMatch[1]) {
-                  const publicId = `ebenor-creation/products/${urlMatch[1]}`;
-                  await cloudinaryService.deleteFile(publicId, 'image');
+                  const publicIdWithFolder = urlMatch[1];
+                  const extension = urlMatch[2].toLowerCase();
+                  
+                  // Determine if it's a video or image
+                  const videoExtensions = ['mp4', 'mov', 'webm', 'avi', 'mkv', 'flv'];
+                  const isVideo = videoExtensions.includes(extension) || url.includes('/video/upload/');
+                  
+                  try {
+                    await cloudinaryService.deleteFile(publicIdWithFolder, isVideo ? 'video' : 'image');
+                    cloudinaryDeletedCount++;
+                  } catch (cloudError: any) {
+                    if (cloudError.http_code !== 404 && !cloudError.message?.includes('not found')) {
+                      logger.warn('Failed to delete media from Cloudinary during bulk delete', {
+                        url,
+                        error: cloudError
+                      });
+                    }
+                  }
                 }
-              } catch (cloudError) {
-                logger.warn('Failed to delete image from Cloudinary during bulk delete', {
-                  url: galleryImage.url,
-                  error: cloudError
+              } catch (parseError) {
+                logger.warn('Failed to parse media URL during bulk delete', {
+                  url,
+                  error: parseError
                 });
               }
             }
           }
 
+          deletedImagesCount = galleryDeletedCount + cloudinaryDeletedCount;
+
           logger.info('Bulk delete products', {
             productsDeleted: result.deletedCount,
-            imagesDeleted: deletedImagesCount,
+            galleryDeleted: galleryDeletedCount,
+            cloudinaryDeleted: cloudinaryDeletedCount,
             deletedBy: req.user?.email || req.user?.id,
           });
           break;

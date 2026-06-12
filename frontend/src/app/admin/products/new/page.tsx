@@ -527,43 +527,38 @@ export default function NewProductPage() {
                 </div>
               </div>
 
-              {/* Category and Subcategory */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Category */}
-                <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-neutral-700 mb-2">
-                    Catégorie <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    id="category"
-                    {...register('category')}
-                    disabled={loadingCategories}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
-                      errors.category ? 'border-red-500' : 'border-neutral-300'
-                    } ${loadingCategories ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <option value="">Sélectionner une catégorie</option>
-                    {loadingCategories ? (
-                      <option disabled>Chargement des catégories...</option>
-                    ) : (
-                      categories.map((category) => (
-                        <option key={category._id} value={category.slug}>
-                          {category.name}
-                        </option>
-                      ))
-                    )}
-                  </select>
-                  {errors.category && (
-                    <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+              {/* Category */}
+              <div>
+                <label htmlFor="category" className="block text-sm font-medium text-neutral-700 mb-2">
+                  Catégorie <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="category"
+                  {...register('category')}
+                  disabled={loadingCategories}
+                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-colors ${
+                    errors.category ? 'border-red-500' : 'border-neutral-300'
+                  } ${loadingCategories ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  <option value="">Sélectionner une catégorie</option>
+                  {loadingCategories ? (
+                    <option disabled>Chargement des catégories...</option>
+                  ) : (
+                    categories.map((category) => (
+                      <option key={category._id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))
                   )}
-                  {categories.length === 0 && !loadingCategories && (
-                    <p className="text-xs text-amber-600 mt-1">
-                      Aucune catégorie disponible. <Link href="/admin/categories" className="underline">Créer des catégories</Link>
-                    </p>
-                  )}
-                </div>
-
-                {/* Subcategory removed */}
+                </select>
+                {errors.category && (
+                  <p className="text-sm text-red-600 mt-1">{errors.category.message}</p>
+                )}
+                {categories.length === 0 && !loadingCategories && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Aucune catégorie disponible. <Link href="/admin/categories" className="underline">Créer des catégories</Link>
+                  </p>
+                )}
               </div>
             </div>
           </motion.div>

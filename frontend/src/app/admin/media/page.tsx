@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/lib/toast';
-import { mediaService } from '@/lib/api';
+import { mediaService, categoryService, galleryService } from '@/lib/api';
 import { 
   MagnifyingGlassIcon, 
   FunnelIcon,
@@ -57,6 +57,13 @@ interface MediaStats {
   byCategory: Record<string, number>;
 }
 
+interface Category {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+}
+
 export default function MediaLibraryPage() {
   const router = useRouter();
   const { isAuthenticated, isLoading: authLoading } = useAuth();
@@ -64,6 +71,7 @@ export default function MediaLibraryPage() {
   // State
   const [media, setMedia] = useState<MediaItem[]>([]);
   const [stats, setStats] = useState<MediaStats | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,20 +88,19 @@ export default function MediaLibraryPage() {
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showFilters, setShowFilters] = useState(false);
 
-  // Selected media for actions
-  const [selectedMedia, setSelectedMedia] = useState<MediaItem | null>(null);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showReplaceModal, setShowReplaceModal] = useState(false);
-  const [showReferencesModal, setShowReferencesModal] = useState(false);
-  const [references, setReferences] = useState<MediaReference[]>([]);
-  const [actionLoading, setActionLoading] = useState(false);
-
   // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/admin/login');
     }
   }, [isAuthenticated, authLoading, router]);
+
+  // Fetch categories
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchCategories();
+    }
+  }, [isAuthenticated]);
 
   // Fetch media and stats
   useEffect(() => {
@@ -102,6 +109,17 @@ export default function MediaLibraryPage() {
       fetchStats();
     }
   }, [isAuthenticated, currentPage, typeFilter, sourceFilter, categoryFilter]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await categoryService.getAll();
+      if (response.success && response.data) {
+        setCategories(response.data.filter((cat: Category) => cat.isActive));
+      }
+    } catch (err) {
+      console.error('Error fetching categories:', err);
+    }
+  };
 
   const fetchMedia = async () => {
     try {
@@ -163,61 +181,6 @@ export default function MediaLibraryPage() {
     fetchMedia();
   };
 
-  const handleDelete = async () => {
-    if (!selectedMedia) return;
-
-    try {
-      setActionLoading(true);
-
-      // Check references first
-      const refResponse = await mediaService.getReferences(selectedMedia.url);
-      if (refResponse.success && refResponse.data && refResponse.data.inUse) {
-        // If referenced elsewhere, log references but proceed with deletion per user preference
-        console.warn('Media is referenced in other resources, proceeding to delete anyway:', refResponse.data.references);
-      }
-
-      // Proceed to delete regardless of references (will update server-side references as configured)
-      const response = await mediaService.delete(selectedMedia.url);
-
-      if (response && response.success) {
-        toast.success('Média supprimé avec succès');
-        setShowDeleteModal(false);
-        setShowReferencesModal(false);
-        setSelectedMedia(null);
-        fetchMedia();
-        fetchStats();
-      }
-    } catch (err: any) {
-      console.error('Error deleting media:', err);
-      alert(err.message || 'Erreur lors de la suppression du média');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleReplace = async (file: File) => {
-    if (!selectedMedia) return;
-
-    try {
-      setActionLoading(true);
-
-      const response = await mediaService.uploadAndReplace(selectedMedia.url, file);
-
-      if (response.success) {
-        alert(`Média remplacé avec succès dans ${response.data.updated} référence(s)`);
-        setShowReplaceModal(false);
-        setSelectedMedia(null);
-        fetchMedia();
-        fetchStats();
-      }
-    } catch (err: any) {
-      console.error('Error replacing media:', err);
-      alert(err.message || 'Erreur lors du remplacement du média');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const formatFileSize = (bytes: number): string => {
     if (bytes === 0) return '0 B';
     const k = 1024;
@@ -270,45 +233,88 @@ export default function MediaLibraryPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-neutral-900">Bibliothèque de Médias</h1>
-          <p className="mt-2 text-neutral-600">
-            Gérez tous vos fichiers médias en un seul endroit
-          </p>
-          {/* Dev-only: Clear all media button */}
-          {process.env.NODE_ENV !== 'production' && media.length > 0 && (
-            <div className="mt-4">
-              <button
-                onClick={async () => {
-                  if (!confirm('Confirmer suppression de tous les médias affichés ? Cette action est irréversible.')) return;
-                  try {
-                    setActionLoading(true);
-                    for (const item of media) {
-                      try {
-                        // attempt to delete each media by URL
-                        // ignore errors for individual items
-                        await mediaService.delete(item.url);
-                      } catch (e) {
-                        console.warn('Failed to delete media', item.url, e);
-                      }
-                    }
-                    toast.success('Suppression terminée');
-                    // Refresh lists
-                    setSelectedMedia(null);
-                    await fetchMedia();
-                    await fetchStats();
-                  } catch (err) {
-                    console.error('Error clearing media:', err);
-                    toast.error('Erreur lors de la suppression en masse');
-                  } finally {
-                    setActionLoading(false);
-                  }
-                }}
-                className="mt-3 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Supprimer tous les médias affichés (dev)
-              </button>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-neutral-900">Bibliothèque de Médias</h1>
+              <p className="mt-2 text-neutral-600">
+                Consultez tous vos fichiers médias en un seul endroit
+              </p>
             </div>
-          )}
+            {/* Cleanup Buttons */}
+            <div className="flex gap-3">
+              {/* Delete ALL Gallery Images */}
+              {media.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!confirm('⚠️ ATTENTION: Voulez-vous SUPPRIMER TOUTES LES IMAGES de la galerie (GalleryImage collection) ? Cette action est IRRÉVERSIBLE!')) return;
+                    if (!confirm('Êtes-vous ABSOLUMENT SÛR? Cela supprimera TOUTES les images de la base de données!')) return;
+                    try {
+                      setLoading(true);
+                      // Direct MongoDB delete all
+                      const response = await fetch('http://localhost:5000/api/admin/gallery/bulk', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          action: 'deleteAll',
+                        }),
+                      });
+                      
+                      const result = await response.json();
+                      if (result.success) {
+                        toast.success('Toutes les images ont été supprimées!');
+                        await fetchMedia();
+                        await fetchStats();
+                      } else {
+                        toast.error(result.message || 'Erreur lors de la suppression');
+                      }
+                    } catch (err: any) {
+                      console.error('Error deleting all:', err);
+                      toast.error(err.message || 'Erreur lors de la suppression');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors flex items-center gap-2 shadow-lg border-2 border-red-900"
+                  title="Supprimer TOUTES les images de la galerie"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                  TOUT SUPPRIMER
+                </button>
+              )}
+              
+              {/* Cleanup Orphaned */}
+              {media.length > 0 && (
+                <button
+                  onClick={async () => {
+                    if (!confirm('Voulez-vous nettoyer toutes les images orphelines (non utilisées par les produits) ?')) return;
+                    try {
+                      setLoading(true);
+                      const response = await galleryService.cleanupOrphanedImages();
+                      if (response.success) {
+                        toast.success(response.message || 'Nettoyage terminé avec succès');
+                        await fetchMedia();
+                        await fetchStats();
+                      }
+                    } catch (err: any) {
+                      console.error('Error cleaning up:', err);
+                      toast.error(err.message || 'Erreur lors du nettoyage');
+                    } finally {
+                      setLoading(false);
+                    }
+                  }}
+                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
+                  title="Nettoyer les images orphelines"
+                >
+                  <TrashIcon className="h-5 w-5" />
+                  Nettoyer orphelines
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Stats Cards */}
@@ -454,13 +460,11 @@ export default function MediaLibraryPage() {
                     className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
                   >
                     <option value="all">Toutes</option>
-                    <option value="cuisine">Cuisine</option>
-                    <option value="dressing">Dressing</option>
-                    <option value="mobilier">Mobilier</option>
-                    <option value="amenagement">Aménagement</option>
-                    <option value="showroom">Showroom</option>
-                    <option value="process">Processus</option>
-                    <option value="autre">Autre</option>
+                    {categories.map((category) => (
+                      <option key={category._id} value={category.slug}>
+                        {category.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>
@@ -493,93 +497,120 @@ export default function MediaLibraryPage() {
             {media.map((item) => (
               <div
                 key={item.id}
-                className="group relative bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden"
+                className="group relative bg-white rounded-xl shadow-sm border border-neutral-200 hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden"
               >
                 {/* Media Preview */}
-                <div className="aspect-square bg-neutral-100 relative">
+                <div className="aspect-square bg-gradient-to-br from-neutral-100 to-neutral-50 relative overflow-hidden">
                   {item.type === 'image' ? (
                     <img
                       src={item.thumbnailUrl || item.url}
                       alt={item.filename}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
-                      <VideoCameraIcon className="h-12 w-12 text-neutral-400" />
+                    <div className="w-full h-full relative">
+                      {/* Video element with hover autoplay */}
+                      <video
+                        src={item.url}
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        muted
+                        loop
+                        playsInline
+                        poster={item.thumbnailUrl}
+                        onMouseEnter={(e) => {
+                          const video = e.currentTarget;
+                          video.play().catch(() => {
+                            // Ignore autoplay errors
+                          });
+                        }}
+                        onMouseLeave={(e) => {
+                          const video = e.currentTarget;
+                          video.pause();
+                          video.currentTime = 0;
+                        }}
+                      />
+                      {/* Play icon overlay */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:opacity-0 transition-opacity pointer-events-none">
+                        <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                          <svg className="w-8 h-8 text-amber-600 ml-1" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
                     </div>
                   )}
 
-                  {/* Hover Overlay */}
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all flex items-center justify-center opacity-0 group-hover:opacity-100">
-                    <div className="flex gap-2">
-                      <button
-                        onClick={() => {
-                          setSelectedMedia(item);
-                          setShowReplaceModal(true);
-                        }}
-                        className="p-2 bg-white rounded-full hover:bg-neutral-100 transition-colors"
-                        title="Remplacer"
-                      >
-                        <ArrowPathIcon className="h-5 w-5 text-neutral-700" />
-                      </button>
-                      <button
-                        onClick={() => {
-                          setSelectedMedia(item);
-                          setShowDeleteModal(true);
-                        }}
-                        className="p-2 bg-white rounded-full hover:bg-red-50 transition-colors"
-                        title="Supprimer"
-                      >
-                        <TrashIcon className="h-5 w-5 text-red-600" />
-                      </button>
+                  {/* Hover Overlay - Read Only (No Actions) */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
+                    {/* Info overlay on hover */}
+                    <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
+                      <p className="text-xs font-medium truncate">{item.filename}</p>
                     </div>
                   </div>
 
                   {/* Type Badge */}
-                  <div className="absolute top-2 left-2">
+                  <div className="absolute top-3 left-3">
                     <span
-                      className={`px-2 py-1 text-xs font-medium rounded ${
+                      className={`px-2.5 py-1 text-xs font-semibold rounded-full shadow-lg backdrop-blur-sm ${
                         item.type === 'image'
-                          ? 'bg-blue-100 text-blue-800'
-                          : 'bg-purple-100 text-purple-800'
+                          ? 'bg-blue-500/90 text-white'
+                          : 'bg-purple-500/90 text-white'
                       }`}
                     >
-                      {item.type === 'image' ? 'Image' : 'Vidéo'}
+                      {item.type === 'image' ? '📷 Image' : '🎥 Vidéo'}
                     </span>
                   </div>
 
                   {/* Source Badge */}
-                  <div className="absolute top-2 right-2">
-                    <span className="px-2 py-1 text-xs font-medium rounded bg-neutral-100 text-neutral-800">
+                  <div className="absolute top-3 right-3">
+                    <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-white/90 backdrop-blur-sm text-neutral-800 shadow-lg">
                       {getSourceLabel(item.source)}
                     </span>
                   </div>
+
+                  {/* References Indicator */}
+                  {item.references.length > 0 && (
+                    <div className="absolute bottom-3 left-3">
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/90 backdrop-blur-sm text-white shadow-lg flex items-center gap-1">
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        {item.references.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Media Info */}
-                <div className="p-3">
-                  <p className="text-sm font-medium text-neutral-900 truncate" title={item.filename}>
+                <div className="p-3.5 space-y-2">
+                  <p className="text-sm font-semibold text-neutral-900 truncate" title={item.filename}>
                     {item.filename}
                   </p>
-                  <div className="mt-1 flex items-center justify-between text-xs text-neutral-500">
-                    <span>{formatFileSize(item.size)}</span>
+                  
+                  <div className="flex items-center justify-between text-xs text-neutral-500">
+                    <span className="font-medium">{formatFileSize(item.size)}</span>
                     {item.dimensions && (
-                      <span>
+                      <span className="text-neutral-400">
                         {item.dimensions.width}×{item.dimensions.height}
                       </span>
                     )}
                   </div>
+                  
                   {item.category && (
-                    <p className="mt-1 text-xs text-neutral-500">
-                      {getCategoryLabel(item.category)}
-                    </p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="inline-block w-2 h-2 rounded-full bg-amber-500"></span>
+                      <span className="text-xs font-medium text-neutral-600">
+                        {getCategoryLabel(item.category)}
+                      </span>
+                    </div>
                   )}
-                  <p className="mt-1 text-xs text-neutral-400">{formatDate(item.uploadedAt)}</p>
-                  {item.references.length > 0 && (
-                    <p className="mt-1 text-xs text-amber-600">
-                      {item.references.length} référence{item.references.length !== 1 ? 's' : ''}
-                    </p>
-                  )}
+                  
+                  <p className="text-xs text-neutral-400 flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {formatDate(item.uploadedAt)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -620,161 +651,6 @@ export default function MediaLibraryPage() {
           </div>
         )}
       </div>
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && selectedMedia && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <ExclamationTriangleIcon className="h-6 w-6 text-red-600" />
-              <h3 className="text-lg font-semibold text-neutral-900">Confirmer la suppression</h3>
-            </div>
-            <p className="text-neutral-600 mb-6">
-              Êtes-vous sûr de vouloir supprimer ce média ? Cette action est irréversible.
-            </p>
-            <p className="text-sm text-neutral-500 mb-6">
-              <strong>Fichier :</strong> {selectedMedia.filename}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowDeleteModal(false);
-                  setSelectedMedia(null);
-                }}
-                disabled={actionLoading}
-                className="px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors disabled:opacity-50"
-              >
-                Annuler
-              </button>
-              <button
-                onClick={handleDelete}
-                disabled={actionLoading}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {actionLoading ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    Suppression...
-                  </>
-                ) : (
-                  <>
-                    <TrashIcon className="h-5 w-5" />
-                    Supprimer
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Replace Modal */}
-      {showReplaceModal && selectedMedia && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-neutral-900">Remplacer le média</h3>
-              <button
-                onClick={() => {
-                  setShowReplaceModal(false);
-                  setSelectedMedia(null);
-                }}
-                className="text-neutral-400 hover:text-neutral-600"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <p className="text-neutral-600 mb-4">
-              Sélectionnez un nouveau fichier pour remplacer ce média. Toutes les références seront
-              automatiquement mises à jour.
-            </p>
-            <p className="text-sm text-neutral-500 mb-6">
-              <strong>Fichier actuel :</strong> {selectedMedia.filename}
-            </p>
-            <input
-              type="file"
-              accept={selectedMedia.type === 'image' ? 'image/*' : 'video/*'}
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file) {
-                  handleReplace(file);
-                }
-              }}
-              disabled={actionLoading}
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent disabled:opacity-50"
-            />
-            {actionLoading && (
-              <div className="mt-4 flex items-center gap-2 text-amber-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
-                <span className="text-sm">Remplacement en cours...</span>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* References Modal */}
-      {showReferencesModal && selectedMedia && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-2xl w-full p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />
-                <h3 className="text-lg font-semibold text-neutral-900">Média en cours d'utilisation</h3>
-              </div>
-              <button
-                onClick={() => {
-                  setShowReferencesModal(false);
-                  setSelectedMedia(null);
-                  setReferences([]);
-                }}
-                className="text-neutral-400 hover:text-neutral-600"
-              >
-                <XMarkIcon className="h-6 w-6" />
-              </button>
-            </div>
-            <p className="text-neutral-600 mb-4">
-              Ce média ne peut pas être supprimé car il est utilisé dans les emplacements suivants :
-            </p>
-            <div className="space-y-2 mb-6">
-              {references.map((ref, index) => (
-                <div key={index} className="p-3 bg-neutral-50 rounded-lg">
-                  <p className="font-medium text-neutral-900">{ref.name}</p>
-                  <p className="text-sm text-neutral-600">
-                    Type: {getSourceLabel(ref.type)}
-                    {ref.field && ` • Champ: ${ref.field}`}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm text-neutral-500 mb-6">
-              Pour supprimer ce média, vous devez d'abord le retirer de tous ces emplacements ou utiliser
-              la fonction "Remplacer" pour le remplacer par un autre fichier.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => {
-                  setShowReferencesModal(false);
-                  setReferences([]);
-                }}
-                className="px-4 py-2 border border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors"
-              >
-                Fermer
-              </button>
-              <button
-                onClick={() => {
-                  setShowReferencesModal(false);
-                  setShowReplaceModal(true);
-                }}
-                className="px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors flex items-center gap-2"
-              >
-                <ArrowPathIcon className="h-5 w-5" />
-                Remplacer le média
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
