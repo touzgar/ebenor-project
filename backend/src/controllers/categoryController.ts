@@ -106,7 +106,7 @@ export class CategoryController {
       });
 
       if (existingCategory) {
-        throw new ApiError('Une catégorie avec ce nom existe déjà', 409, ERROR_CODES.CONFLICT);
+        throw new ApiError('Une catégorie avec ce nom existe déjà', 409, ERROR_CODES.DUPLICATE_ERROR);
       }
 
       const category = new Category({
@@ -174,7 +174,7 @@ export class CategoryController {
         });
 
         if (existingCategory) {
-          throw new ApiError('Une catégorie avec ce nom existe déjà', 409, ERROR_CODES.CONFLICT);
+          throw new ApiError('Une catégorie avec ce nom existe déjà', 409, ERROR_CODES.DUPLICATE_ERROR);
         }
 
         category.name = name;

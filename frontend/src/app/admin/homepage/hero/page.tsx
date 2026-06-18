@@ -230,7 +230,7 @@ export default function HeroEditorPage() {
           formData.append('category', 'showroom');
           
           // Upload to gallery
-          const uploadResponse = await galleryService.uploadImage(formData);
+          const uploadResponse = await galleryService.uploadImage(formData) as any;
           
           if (uploadResponse.success && uploadResponse.data?.url) {
             finalBackgroundImage = uploadResponse.data.url;

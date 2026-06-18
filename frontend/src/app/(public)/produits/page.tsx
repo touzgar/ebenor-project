@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/premium/Header';
@@ -8,7 +8,7 @@ import { Footer } from '@/components/public/Footer';
 import ProductImageGrid from '@/components/public/ProductImageGrid';
 import Pagination from '@/components/ui/Pagination';
 import { SkeletonGrid } from '@/components/ui/LoadingSkeleton';
-import { getProducts, Product, ProductFilters, getCategoryLabel, getCategories } from '@/lib/api/products';
+import { getProducts, Product, ProductFilters, getCategories } from '@/lib/api/products';
 import { getShowroomContent } from '@/lib/api/showroom';
 import { 
   Squares2X2Icon, 
@@ -20,7 +20,7 @@ import {
  * Product Catalog Page with SEO optimization
  * Requirements: 23.5, 23.9, 23.10
  */
-export default function ProduitsPage() {
+function ProduitsPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -57,11 +57,7 @@ export default function ProduitsPage() {
     color?: string;
   }>>([]);
   
-  // Category name lookup map
-  const [categoryNameMap, setCategoryNameMap] = useState<Record<string, string>>({});
-  
-  const [sortBy, setSortBy] = useState(searchParams.get('sort') || '-createdAt');
-  const [searchInput, setSearchInput] = useState(filters.search || '');
+  const [sortBy] = useState(searchParams.get('sort') || '-createdAt');
 
   // Fetch showroom content
   useEffect(() => {
@@ -88,6 +84,7 @@ export default function ProduitsPage() {
       const interval = setInterval(loadShowroomContent, 5000);
       return () => clearInterval(interval);
     }
+    return undefined;
   }, [mounted]);
 
   // Fetch products
@@ -126,12 +123,6 @@ export default function ProduitsPage() {
             icon: cat.icon,
             color: cat.color,
           }));
-          
-          const nameMap: Record<string, string> = {};
-          categoriesArray.forEach(cat => {
-            nameMap[cat.category] = cat.name;
-          });
-          setCategoryNameMap(nameMap);
           
           const sortedCategories = categoriesArray.sort((a, b) => b.count - a.count);
           setAvailableCategories(sortedCategories);
@@ -193,28 +184,6 @@ export default function ProduitsPage() {
     setCurrentPage(1);
   };
 
-  // Handle search
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = searchInput.trim();
-    
-    // Only apply search if empty or at least 2 characters
-    if (trimmed.length === 0 || trimmed.length >= 2) {
-      setFilters(prev => ({
-        ...prev,
-        search: trimmed || undefined,
-      }));
-      setCurrentPage(1);
-    }
-    // If 1 character, do nothing (keep current filters)
-  };
-
-  // Handle sort change
-  const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSortBy(e.target.value);
-    setCurrentPage(1);
-  };
-
   // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
@@ -224,8 +193,6 @@ export default function ProduitsPage() {
   // Clear all filters
   const clearFilters = () => {
     setFilters({});
-    setSearchInput('');
-    setSortBy('-createdAt');
     setCurrentPage(1);
   };
 
@@ -339,7 +306,7 @@ export default function ProduitsPage() {
                   </motion.button>
 
                   {/* Category Buttons */}
-                  {availableCategories.map((cat, index) => {
+                  {availableCategories.map((cat) => {
                     const isActive = filters.category === cat.category;
                     return (
                       <motion.button
@@ -549,5 +516,20 @@ export default function ProduitsPage() {
       
       <Footer />
     </>
+  );
+}
+
+export default function ProduitsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <ProduitsPageContent />
+    </Suspense>
   );
 }

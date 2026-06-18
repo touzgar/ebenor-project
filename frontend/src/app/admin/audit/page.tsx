@@ -70,10 +70,10 @@ export default function AuditLogPage() {
       if (filters.startDate) params.startDate = filters.startDate;
       if (filters.endDate) params.endDate = filters.endDate;
 
-      const response = await auditService.getAll(params);
+      const response = await auditService.getAll(params) as any;
 
       if (response.success && response.data) {
-        setLogs(response.data);
+        setLogs(Array.isArray(response.data) ? response.data : []);
         if (response.pagination) {
           setPagination(response.pagination);
         }

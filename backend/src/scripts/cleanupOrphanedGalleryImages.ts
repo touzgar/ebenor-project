@@ -9,7 +9,6 @@ import mongoose from 'mongoose';
 import { Product } from '../models/Product';
 import { GalleryImage } from '../models/GalleryImage';
 import { cloudinaryService } from '../services/cloudinaryService';
-import { logger } from '../utils/logger';
 import dotenv from 'dotenv';
 
 // Load environment variables
@@ -20,7 +19,7 @@ async function cleanupOrphanedGalleryImages() {
     console.log('🔍 Starting cleanup of orphaned gallery images...\n');
 
     // Connect to MongoDB
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/ebenor-creation';
+    const mongoUri = process.env['MONGODB_URI'] || 'mongodb://localhost:27017/ebenor-creation';
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB\n');
 
@@ -29,10 +28,11 @@ async function cleanupOrphanedGalleryImages() {
     const productImageUrls = new Set<string>();
     
     products.forEach(product => {
-      if (product.images && Array.isArray(product.images)) {
-        product.images.forEach((img: any) => {
-          if (img.url) {
-            productImageUrls.add(img.url);
+      const productData = product as any;
+      if (productData['images'] && Array.isArray(productData['images'])) {
+        productData['images'].forEach((img: any) => {
+          if (img['url']) {
+            productImageUrls.add(img['url']);
           }
         });
       }
@@ -45,7 +45,10 @@ async function cleanupOrphanedGalleryImages() {
     console.log(`🖼️  Found ${galleryImages.length} gallery image(s)\n`);
 
     // Find orphaned images (gallery images not referenced by any product)
-    const orphanedImages = galleryImages.filter(img => !productImageUrls.has(img.url));
+    const orphanedImages = galleryImages.filter(img => {
+      const imgData = img as any;
+      return !productImageUrls.has(imgData['url']);
+    });
     
     console.log(`🗑️  Found ${orphanedImages.length} orphaned image(s) to delete:\n`);
 
@@ -57,14 +60,15 @@ async function cleanupOrphanedGalleryImages() {
 
     // Display orphaned images
     orphanedImages.forEach((img, index) => {
-      console.log(`   ${index + 1}. ${img.title || 'Untitled'}`);
-      console.log(`      URL: ${img.url}`);
-      console.log(`      Category: ${img.category}`);
-      console.log(`      Uploaded: ${img.uploadedAt || 'Unknown'}\n`);
+      const imgData = img as any;
+      console.log(`   ${index + 1}. ${imgData['title'] || 'Untitled'}`);
+      console.log(`      URL: ${imgData['url']}`);
+      console.log(`      Category: ${imgData['category']}`);
+      console.log(`      Uploaded: ${imgData['uploadedAt'] || 'Unknown'}\n`);
     });
 
     // Delete orphaned images from database
-    const orphanedUrls = orphanedImages.map(img => img.url);
+    const orphanedUrls = orphanedImages.map(img => (img as any)['url']);
     const deleteResult = await GalleryImage.deleteMany({
       url: { $in: orphanedUrls }
     });
@@ -79,19 +83,21 @@ async function cleanupOrphanedGalleryImages() {
 
     for (const img of orphanedImages) {
       try {
+        const imgData = img as any;
         // Extract public_id from URL
-        const urlMatch = img.url.match(/\/([^/]+)\.(jpg|jpeg|png|webp|mp4|mov)$/i);
+        const urlMatch = imgData['url'].match(/\/([^/]+)\.(jpg|jpeg|png|webp|mp4|mov)$/i);
         if (urlMatch && urlMatch[1]) {
           const publicId = `ebenor-creation/products/${urlMatch[1]}`;
           await cloudinaryService.deleteFile(publicId, 'image');
           cloudinaryDeletedCount++;
-          console.log(`   ✅ Deleted from Cloudinary: ${img.title || 'Untitled'}`);
+          console.log(`   ✅ Deleted from Cloudinary: ${imgData['title'] || 'Untitled'}`);
         } else {
-          console.log(`   ⚠️  Could not extract public_id from: ${img.url}`);
+          console.log(`   ⚠️  Could not extract public_id from: ${imgData['url']}`);
         }
       } catch (error) {
+        const imgData = img as any;
         cloudinaryFailedCount++;
-        console.log(`   ❌ Failed to delete from Cloudinary: ${img.title || 'Untitled'}`);
+        console.log(`   ❌ Failed to delete from Cloudinary: ${imgData['title'] || 'Untitled'}`);
         console.log(`      Error: ${(error as Error).message}`);
       }
     }

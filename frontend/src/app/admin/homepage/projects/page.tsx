@@ -6,7 +6,6 @@ import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import {
   CheckCircleIcon,
-  PencilIcon,
   ArrowPathIcon,
   Squares2X2Icon,
   SparklesIcon,

@@ -9,7 +9,6 @@ import {
   MagnifyingGlassIcon, 
   FunnelIcon,
   TrashIcon,
-  ArrowPathIcon,
   PhotoIcon,
   VideoCameraIcon,
   XMarkIcon,

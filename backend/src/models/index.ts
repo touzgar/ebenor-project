@@ -1,4 +1,12 @@
 // Export de tous les modèles Mongoose
+import { HomeContent, HomeContentDocument } from './HomeContent';
+import { Product, ProductDocument } from './Product';
+import { GalleryImage, GalleryImageDocument } from './GalleryImage';
+import { Message, MessageDocument } from './Message';
+import { AdminUser, AdminUserDocument } from './AdminUser';
+import { AuditLog, AuditLogDocument } from './AuditLog';
+import { Category, ICategory } from './Category';
+
 export { HomeContent, HomeContentDocument } from './HomeContent';
 export { Product, ProductDocument } from './Product';
 export { GalleryImage, GalleryImageDocument } from './GalleryImage';
@@ -22,11 +30,30 @@ export interface DatabaseModels {
 export async function initializeModels(): Promise<void> {
   try {
     // Créer l'utilisateur admin par défaut s'il n'existe pas
-    const { AdminUser } = await import('./AdminUser');
-    await AdminUser.createDefaultAdmin();
+    await AdminUser.createIndexes();
+    const existingAdmin = await AdminUser.findOne({ role: 'super_admin' });
+    
+    if (!existingAdmin) {
+      const defaultAdmin = new AdminUser({
+        email: 'admin@ebenor-creation.tn',
+        password: 'Admin123!',
+        firstName: 'Super',
+        lastName: 'Admin',
+        role: 'super_admin',
+        permissions: [
+          { resource: 'products', actions: ['create', 'read', 'update', 'delete'] },
+          { resource: 'gallery', actions: ['create', 'read', 'update', 'delete'] },
+          { resource: 'messages', actions: ['create', 'read', 'update', 'delete'] },
+          { resource: 'home_content', actions: ['create', 'read', 'update', 'delete'] },
+          { resource: 'users', actions: ['create', 'read', 'update', 'delete'] },
+          { resource: 'settings', actions: ['create', 'read', 'update', 'delete'] }
+        ]
+      });
+      await defaultAdmin.save();
+      console.log('✅ Admin par défaut créé');
+    }
     
     // Créer les catégories par défaut si elles n'existent pas
-    const { Category } = await import('./Category');
     const defaultCategories = [
       {
         name: 'Cuisine',
@@ -105,13 +132,13 @@ export async function initializeModels(): Promise<void> {
 export async function createIndexes(): Promise<void> {
   try {
     const models = [
-      (await import('./HomeContent')).HomeContent,
-      (await import('./Product')).Product,
-      (await import('./GalleryImage')).GalleryImage,
-      (await import('./Message')).Message,
-      (await import('./AdminUser')).AdminUser,
-      (await import('./AuditLog')).AuditLog,
-      (await import('./Category')).Category
+      HomeContent,
+      Product,
+      GalleryImage,
+      Message,
+      AdminUser,
+      AuditLog,
+      Category
     ];
 
     for (const model of models) {

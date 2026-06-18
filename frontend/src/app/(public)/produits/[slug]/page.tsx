@@ -181,7 +181,7 @@ export default function ProductDetailPage() {
                     >
                       <video
                         ref={mainVideoRef}
-                        src={product.video.url}
+                        src={product.video?.url || ''}
                         className="w-full h-full object-cover"
                         loop
                         muted
@@ -275,7 +275,7 @@ export default function ProductDetailPage() {
                           selectedImageIndex === 0 ? 'ring-4 ring-amber-500 scale-105' : 'ring-2 ring-neutral-200 hover:ring-amber-400'
                         }`}
                       >
-                        <video src={product.video.url} className="w-full h-full object-cover" />
+                        <video src={product.video?.url || ''} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                           <PlayIcon className="w-10 h-10 text-white drop-shadow-2xl" />
                         </div>
@@ -342,11 +342,11 @@ export default function ProductDetailPage() {
                       {formatPrice(product.price)}
                     </div>
                     <span className={`px-4 py-1.5 rounded-full text-sm font-bold flex items-center gap-2 ${
-                      product.availability === 'in-stock' ? 'bg-green-50 text-green-700' :
-                      product.availability === 'pre-order' ? 'bg-blue-50 text-blue-700' :
+                      product.availability === 'in_stock' ? 'bg-green-50 text-green-700' :
+                      product.availability === 'made_to_order' ? 'bg-blue-50 text-blue-700' :
                       'bg-red-50 text-red-700'
                     }`}>
-                      {product.availability === 'in-stock' && <CheckCircleIcon className="w-5 h-5" />}
+                      {product.availability === 'in_stock' && <CheckCircleIcon className="w-5 h-5" />}
                       {getAvailabilityLabel(product.availability)}
                     </span>
                   </div>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Header } from '@/components/premium/Header';
@@ -8,11 +8,10 @@ import { Footer } from '@/components/public/Footer';
 import ProductGrid from '@/components/public/ProductGrid';
 import Pagination from '@/components/ui/Pagination';
 import { SkeletonGrid } from '@/components/ui/LoadingSkeleton';
-import { getProducts, Product, ProductFilters, getCategoryLabel, getCategories } from '@/lib/api/products';
+import { getProducts, Product, ProductFilters, getCategories } from '@/lib/api/products';
 import { 
   Squares2X2Icon,
   SparklesIcon,
-  AdjustmentsHorizontalIcon,
   XMarkIcon
 } from '@heroicons/react/24/outline';
 
@@ -20,7 +19,7 @@ import {
  * Gallery Page showing Products with SEO optimization
  * Requirements: 23.5, 23.9, 23.10
  */
-export default function GaleriePage() {
+function GaleriePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   
@@ -38,8 +37,6 @@ export default function GaleriePage() {
       buttonLink: '/contact',
     },
   });
-  
-  const [isContentUpdating, setIsContentUpdating] = useState(false);
 
   // Load content from localStorage
   useEffect(() => {
@@ -48,9 +45,7 @@ export default function GaleriePage() {
       if (saved) {
         try {
           const parsed = JSON.parse(saved);
-          setIsContentUpdating(true);
           setPageContent(parsed);
-          setTimeout(() => setIsContentUpdating(false), 300);
         } catch (error) {
           // Use default content
         }
@@ -81,9 +76,7 @@ export default function GaleriePage() {
       channel = new BroadcastChannel('projects_page_updates');
       channel.onmessage = (event) => {
         if (event.data.type === 'update') {
-          setIsContentUpdating(true);
           setPageContent(event.data.data);
-          setTimeout(() => setIsContentUpdating(false), 300);
         }
       };
     } catch (e) {
@@ -133,10 +126,6 @@ export default function GaleriePage() {
   
   // Category name lookup map
   const [categoryNameMap, setCategoryNameMap] = useState<Record<string, string>>({});
-
-  // Polling for category updates
-  const [lastCategoryUpdateCheck, setLastCategoryUpdateCheck] = useState<number>(Date.now());
-  const [isRefreshingCategories, setIsRefreshingCategories] = useState(false);
 
   // Fix SSR hydration by only rendering on client
   useEffect(() => {
@@ -198,7 +187,6 @@ export default function GaleriePage() {
         valid.sort((a: any, b: any) => b.count - a.count);
 
         setAvailableCategories(valid);
-        setLastCategoryUpdateCheck(Date.now());
       } else {
         // Silent fail
       }
@@ -376,7 +364,7 @@ export default function GaleriePage() {
                     </motion.button>
 
                     {/* Category Buttons */}
-                    {availableCategories.map((cat, index) => {
+                    {availableCategories.map((cat) => {
                       const isActive = filters.category === cat.category;
                       return (
                         <motion.button
@@ -587,5 +575,20 @@ export default function GaleriePage() {
 
       <Footer />
     </>
+  );
+}
+
+export default function GaleriePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-amber-600 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    }>
+      <GaleriePageContent />
+    </Suspense>
   );
 }

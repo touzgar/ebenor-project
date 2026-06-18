@@ -126,7 +126,6 @@ export class MockDataService {
         description: "Une cuisine moderne en chêne massif avec îlot central et finitions haut de gamme. Design épuré et fonctionnel pour un espace de vie convivial.",
         shortDescription: "Cuisine moderne en chêne massif avec îlot central",
         category: "cuisine",
-        subcategory: "moderne",
         images: [
           {
             url: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
@@ -160,7 +159,6 @@ export class MockDataService {
         description: "Dressing walk-in sur mesure avec éclairage LED intégré, miroirs et rangements optimisés. Parfait pour les grandes chambres parentales.",
         shortDescription: "Dressing walk-in avec éclairage LED intégré",
         category: "dressing",
-        subcategory: "walk-in",
         images: [
           {
             url: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",

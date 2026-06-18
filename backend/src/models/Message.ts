@@ -1,7 +1,16 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import { Message as IMessage } from '../types';
 
-export interface MessageDocument extends IMessage, Document {}
+// Omit _id from IMessage to avoid conflicts with Mongoose's _id
+type MessageBase = Omit<IMessage, '_id'>;
+
+export interface MessageDocument extends MessageBase, mongoose.Document {
+  toPublicJSON(): any;
+  markAsRead(userId: string): Promise<MessageDocument>;
+  markAsReplied(userId: string): Promise<MessageDocument>;
+  addNote(text: string, userId: string): Promise<MessageDocument>;
+  setPriority(priority: 'low' | 'medium' | 'high'): Promise<MessageDocument>;
+}
 
 const MessageSchema = new Schema<MessageDocument>({
   name: { 
@@ -220,4 +229,4 @@ MessageSchema.virtual('age').get(function() {
   }
 });
 
-export const Message = mongoose.models.Message || mongoose.model<MessageDocument>('Message', MessageSchema);
+export const Message = (mongoose.models.Message as Model<MessageDocument>) || mongoose.model<MessageDocument>('Message', MessageSchema);

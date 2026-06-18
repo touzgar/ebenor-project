@@ -1,7 +1,16 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import { GalleryImage as IGalleryImage } from '../types';
 
-export interface GalleryImageDocument extends IGalleryImage, Document {}
+// Omit _id from IGalleryImage to avoid conflicts with Mongoose's _id
+type GalleryImageBase = Omit<IGalleryImage, '_id'>;
+
+export interface GalleryImageDocument extends GalleryImageBase, mongoose.Document {
+  toPublicJSON(): any;
+  getAspectRatio(): number;
+  isLandscape(): boolean;
+  isPortrait(): boolean;
+  isSquare(): boolean;
+}
 
 const GalleryImageSchema = new Schema<GalleryImageDocument>({
   title: { 
@@ -175,4 +184,4 @@ GalleryImageSchema.pre('deleteOne', { document: true, query: false }, function(n
   next();
 });
 
-export const GalleryImage = mongoose.models.GalleryImage || mongoose.model<GalleryImageDocument>('GalleryImage', GalleryImageSchema);
+export const GalleryImage = (mongoose.models.GalleryImage as Model<GalleryImageDocument>) || mongoose.model<GalleryImageDocument>('GalleryImage', GalleryImageSchema);

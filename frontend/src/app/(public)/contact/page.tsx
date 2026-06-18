@@ -119,7 +119,6 @@ const defaultContent: ContactPageContent = {
  */
 export default function ContactPage() {
   const [pageContent, setPageContent] = useState<ContactPageContent>(defaultContent);
-  const [mounted, setMounted] = useState(false);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -139,7 +138,6 @@ export default function ContactPage() {
 
   // Load content from localStorage
   useEffect(() => {
-    setMounted(true);
     const saved = localStorage.getItem('contact_page_content');
     if (saved) {
       try {

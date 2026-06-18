@@ -16,16 +16,18 @@ import {
   validatePayloadSize,
   timingAttackProtection 
 } from './middleware/security';
-import { setCsrfToken, conditionalCsrfValidation } from './middleware/csrf';
+import { setCsrfToken } from './middleware/csrf';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+import { env } from './config/env';
+
+const PORT = env.PORT;
 
 // Configuration CORS
 const corsOptions = {
   origin: function (origin: string | undefined, callback: Function) {
     const allowedOrigins = [
-      process.env.FRONTEND_URL || 'http://localhost:3002',
+      env.FRONTEND_URL,
       'http://localhost:3000',
       'http://localhost:3001',
       'http://localhost:3002',
@@ -33,12 +35,12 @@ const corsOptions = {
     ];
 
     // Permettre les requêtes sans origine en développement (Postman, curl, etc.)
-    if (process.env.NODE_ENV === 'development' && !origin) {
+    if (env.NODE_ENV === 'development' && !origin) {
       return callback(null, true);
     }
 
     // En développement, autoriser toute origine localhost (ports variables)
-    if (process.env.NODE_ENV === 'development' && origin) {
+    if (env.NODE_ENV === 'development' && origin) {
       try {
         const host = new URL(origin).host;
         if (host.startsWith('localhost') || host.startsWith('127.0.0.1')) {
@@ -106,8 +108,8 @@ app.use(sanitizeInput);
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000'), // 15 minutes
-  max: process.env.NODE_ENV === 'development' ? 10000 : parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100'), // 10000 en dev, 100 en prod
+  windowMs: env.RATE_LIMIT_WINDOW_MS,
+  max: env.NODE_ENV === 'development' ? 10000 : env.RATE_LIMIT_MAX_REQUESTS,
   message: {
     success: false,
     message: 'Trop de requêtes depuis cette IP, réessayez plus tard.',
@@ -115,7 +117,7 @@ const limiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skip: (req) => process.env.NODE_ENV === 'development', // Skip complètement en dev
+  skip: () => env.NODE_ENV === 'development', // Skip complètement en dev
 });
 app.use('/api/', limiter);
 
@@ -128,12 +130,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(setCsrfToken);
 
 // Route de santé
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
     uptime: process.uptime(),
-    environment: process.env.NODE_ENV,
+    environment: env.NODE_ENV,
   });
 });
 
@@ -168,7 +170,7 @@ const startServer = async (): Promise<void> => {
     
     app.listen(PORT, () => {
       logger.info(`🚀 Serveur ÉBENOR CRÉATION démarré sur le port ${PORT}`);
-      logger.info(`📊 Environnement: ${process.env.NODE_ENV}`);
+      logger.info(`📊 Environnement: ${env.NODE_ENV}`);
       logger.info(`🔗 API disponible sur: http://localhost:${PORT}/api`);
       logger.info(`🗄️ Base de données: ${mongoose.connection.readyState === 1 ? 'Connectée' : 'Non disponible'}`);
     });

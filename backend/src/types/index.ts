@@ -23,6 +23,13 @@ export interface ApiResponse<T = any> {
   data?: T;
   error?: string;
   code?: string;
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+    hasMore?: boolean;
+  };
 }
 
 export interface PaginatedResponse<T> extends ApiResponse<T[]> {

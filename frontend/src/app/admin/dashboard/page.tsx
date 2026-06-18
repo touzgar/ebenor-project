@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
   DashboardStats, 
-  RecentActivity,
   QuickActions,
   CategoryBreakdown,
   RecentUploads,

@@ -1,7 +1,6 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 
 export interface AuditLog {
-  _id?: string;
   userId: string;
   userEmail?: string;
   action: 'create' | 'update' | 'delete' | 'bulk_delete' | 'bulk_update' | 'login' | 'logout' | 'password_change' | 'upload' | 'download';
@@ -17,7 +16,9 @@ export interface AuditLog {
   metadata?: Record<string, any>;
 }
 
-export interface AuditLogDocument extends AuditLog, Document {}
+export interface AuditLogDocument extends AuditLog, mongoose.Document {
+  toPublicJSON(): any;
+}
 
 const AuditLogSchema = new Schema<AuditLogDocument>({
   userId: { 
@@ -131,4 +132,4 @@ AuditLogSchema.methods.toPublicJSON = function() {
   return obj;
 };
 
-export const AuditLog = mongoose.models.AuditLog || mongoose.model<AuditLogDocument>('AuditLog', AuditLogSchema);
+export const AuditLog = (mongoose.models.AuditLog as Model<AuditLogDocument>) || mongoose.model<AuditLogDocument>('AuditLog', AuditLogSchema);

@@ -1,7 +1,13 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import { Product as IProduct } from '../types';
 
-export interface ProductDocument extends IProduct, Document {}
+// Omit _id from IProduct to avoid conflicts with Mongoose's _id
+type ProductBase = Omit<IProduct, '_id'>;
+
+export interface ProductDocument extends ProductBase, mongoose.Document {
+  toPublicJSON(): any;
+  getPrimaryImage(): any;
+}
 
 const ProductSchema = new Schema<ProductDocument>({
   name: { 
@@ -204,4 +210,4 @@ ProductSchema.post('save', function(doc) {
   // Product saved silently
 });
 
-export const Product = mongoose.models.Product || mongoose.model<ProductDocument>('Product', ProductSchema);
+export const Product = (mongoose.models.Product as Model<ProductDocument>) || mongoose.model<ProductDocument>('Product', ProductSchema);

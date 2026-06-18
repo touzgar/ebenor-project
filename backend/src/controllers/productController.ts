@@ -505,7 +505,7 @@ export class ProductController {
         next(new ApiError(
           'Un produit avec ce slug existe déjà',
           409,
-          ERROR_CODES.DUPLICATE_ENTRY
+          ERROR_CODES.DUPLICATE_ERROR
         ));
       } else {
         next(error);
@@ -566,7 +566,7 @@ export class ProductController {
         next(new ApiError(
           'Un produit avec ce slug existe déjà',
           409,
-          ERROR_CODES.DUPLICATE_ENTRY
+          ERROR_CODES.DUPLICATE_ERROR
         ));
       } else {
         next(error);

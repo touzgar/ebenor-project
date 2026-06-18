@@ -21,6 +21,7 @@ interface Category {
   name: string;
   slug: string;
   description?: string;
+  icon?: string;
   color: string;
   isActive: boolean;
   displayOrder: number;
@@ -51,6 +52,7 @@ export default function CategoriesPage() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    icon: '',
     color: '#f59e0b',
     isActive: true,
     displayOrder: 0,
@@ -80,9 +82,9 @@ export default function CategoriesPage() {
         params.append('search', searchQuery.trim());
       }
 
-      const response = await categoryService.getAll(Object.fromEntries(params));
+      const response = await categoryService.getAll(Object.fromEntries(params)) as any;
       if (response.success && response.data) {
-        setCategories(response.data);
+        setCategories(Array.isArray(response.data) ? response.data : []);
         
         // Update pagination info
         if ('pagination' in response && response.pagination) {
@@ -122,6 +124,7 @@ export default function CategoriesPage() {
       setFormData({
         name: category.name,
         description: category.description || '',
+        icon: category.icon || '',
         color: category.color,
         isActive: category.isActive,
         displayOrder: category.displayOrder,
@@ -131,6 +134,7 @@ export default function CategoriesPage() {
       setFormData({
         name: '',
         description: '',
+        icon: '',
         color: '#f59e0b',
         isActive: true,
         displayOrder: 0,

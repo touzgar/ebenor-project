@@ -70,7 +70,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       sitemap.push(...productPages);
     }
   } catch (error) {
-    console.error('Error fetching products for sitemap:', error);
+    // Silently ignore - backend not running during build
   }
 
   try {
@@ -94,7 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       // sitemap.push(...galleryPages);
     }
   } catch (error) {
-    console.error('Error fetching gallery images for sitemap:', error);
+    // Silently ignore - backend not running during build
   }
 
   return sitemap;

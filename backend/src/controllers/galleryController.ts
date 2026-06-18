@@ -643,7 +643,8 @@ export class GalleryController {
           message: `${result.deletedCount} image(s) supprimée(s) avec succès`,
         };
 
-        return res.status(200).json(response);
+        res.status(200).json(response);
+        return;
       }
 
       if (!action || !imageIds || !Array.isArray(imageIds) || imageIds.length === 0) {
@@ -787,7 +788,8 @@ export class GalleryController {
           },
           message: 'Aucune image orpheline trouvée. La galerie est propre!',
         };
-        return res.status(200).json(response);
+        res.status(200).json(response);
+        return;
       }
 
       // Delete orphaned images from database

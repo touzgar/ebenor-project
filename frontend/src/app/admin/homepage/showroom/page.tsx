@@ -8,7 +8,7 @@ import {
   CheckCircleIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
-import { getShowroomContent, updateShowroomContent, type ShowroomContent } from '@/lib/api/showroom';
+import { getShowroomContent, updateShowroomContent } from '@/lib/api/showroom';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function ShowroomAdminPage() {

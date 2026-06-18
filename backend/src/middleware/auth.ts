@@ -4,6 +4,9 @@ import { AdminUser } from '../models/AdminUser';
 import { ApiError, ERROR_CODES } from './errorHandler';
 import { AuthenticatedRequest } from '../types';
 
+// Export AuthRequest as alias for AuthenticatedRequest for backwards compatibility
+export type AuthRequest = AuthenticatedRequest;
+
 /**
  * Middleware d'authentification JWT
  */

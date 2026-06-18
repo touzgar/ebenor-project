@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface ICategory extends Document {
   name: string;
@@ -56,4 +56,4 @@ const categorySchema = new Schema<ICategory>(
 // Create indexes
 categorySchema.index({ isActive: 1 });
 
-export const Category = mongoose.model<ICategory>('Category', categorySchema);
+export const Category = (mongoose.models.Category as Model<ICategory>) || mongoose.model<ICategory>('Category', categorySchema);

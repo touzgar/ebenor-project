@@ -1,24 +1,31 @@
 version: '3.8'
 
 services:
-  # Base de données MongoDB
+  # MongoDB Database
   mongodb:
     image: mongo:7.0
     container_name: ebenor-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password123
-      MONGO_INITDB_DATABASE: ebenor-creation
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE:-ebenor-creation}
+    # WARNING: Do not expose MongoDB port in production
+    # Remove the ports section or use profiles to control exposure
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
       - ./backend/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - ebenor-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
-  # API Backend Express.js
+  # Backend API - Express.js
   backend:
     build:
       context: ./backend
@@ -27,41 +34,81 @@ services:
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      PORT: 5000
-      MONGODB_URI: mongodb://admin:password123@mongodb:27017/ebenor-creation?authSource=admin
+      PORT: ${BACKEND_PORT:-5000}
+      FRONTEND_URL: ${FRONTEND_URL}
+      # MongoDB connection built from environment variables
+      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-ebenor-creation}?authSource=admin
+      # Security
       JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+      # Cloudinary
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # UploadThing (optional)
+      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
+      UPLOADTHING_APP_ID: ${UPLOADTHING_APP_ID}
+      UPLOADTHING_SECRET: ${UPLOADTHING_SECRET}
+      # Email
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      FROM_EMAIL: ${FROM_EMAIL}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      # Rate limiting
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+      # Logging
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      LOG_FILE_PATH: ${LOG_FILE_PATH:-./logs}
     ports:
-      - "5000:5000"
+      - "${BACKEND_PORT:-5000}:5000"
     depends_on:
-      - mongodb
+      mongodb:
+        condition: service_healthy
     volumes:
       - ./backend/logs:/app/logs
       - ./backend/uploads:/app/uploads
     networks:
       - ebenor-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Frontend Next.js
+  # Frontend - Next.js
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+        NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+        NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
     container_name: ebenor-frontend
     restart: unless-stopped
     environment:
       NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://backend:5000/api
-      NEXT_PUBLIC_WHATSAPP_NUMBER: ${WHATSAPP_NUMBER}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
+      NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
+      NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - ebenor-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
-  # Nginx Reverse Proxy (Optionnel pour production)
+  # Nginx Reverse Proxy (Production only)
   nginx:
     image: nginx:alpine
     container_name: ebenor-nginx
@@ -87,36 +134,3 @@ volumes:
 networks:
   ebenor-network:
     driver: bridge
-
-# Configuration pour le développement
-# Utiliser: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
----
-# docker-compose.dev.yml
-version: '3.8'
-
-services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    environment:
-      NODE_ENV: development
-    volumes:
-      - ./backend/src:/app/src
-      - ./backend/package.json:/app/package.json
-      - ./backend/tsconfig.json:/app/tsconfig.json
-    command: npm run dev
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    environment:
-      NODE_ENV: development
-    volumes:
-      - ./frontend/src:/app/src
-      - ./frontend/public:/app/public
-      - ./frontend/package.json:/app/package.json
-      - ./frontend/next.config.js:/app/next.config.js
-      - ./frontend/tailwind.config.js:/app/tailwind.config.js
-    command: npm run dev

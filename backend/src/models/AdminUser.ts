@@ -1,13 +1,18 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 import { AdminUser as IAdminUser } from '../types';
 
-export interface AdminUserDocument extends IAdminUser, Document {
+// Omit _id from IAdminUser to avoid conflicts with Mongoose's _id
+type AdminUserBase = Omit<IAdminUser, '_id'>;
+
+export interface AdminUserDocument extends AdminUserBase, mongoose.Document {
   comparePassword(candidatePassword: string): Promise<boolean>;
   incrementLoginAttempts(): Promise<void>;
   resetLoginAttempts(): Promise<void>;
   isLocked(): boolean;
   generatePasswordResetToken(): string;
+  toPublicJSON(): any;
+  hasPermission(resource: string, action: string): boolean;
 }
 
 const AdminUserSchema = new Schema<AdminUserDocument>({
@@ -88,7 +93,7 @@ AdminUserSchema.virtual('fullName').get(function() {
 
 // Virtual pour vérifier si le compte est verrouillé
 AdminUserSchema.virtual('isAccountLocked').get(function() {
-  return !!(this.lockUntil && this.lockUntil > Date.now());
+  return !!(this.lockUntil && this.lockUntil.getTime() > Date.now());
 });
 
 // Méthodes d'instance
@@ -256,4 +261,4 @@ AdminUserSchema.post('save', function(doc) {
   }
 });
 
-export const AdminUser = mongoose.models.AdminUser || mongoose.model<AdminUserDocument>('AdminUser', AdminUserSchema);
+export const AdminUser = (mongoose.models.AdminUser as Model<AdminUserDocument>) || mongoose.model<AdminUserDocument>('AdminUser', AdminUserSchema);

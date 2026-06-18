@@ -70,7 +70,7 @@ class UploadThingService {
       }
 
       const data = await response.json();
-      const uploadedFile = data.data?.[0] || data;
+      const uploadedFile = (data as any).data?.[0] || data;
 
       if (!uploadedFile || !uploadedFile.url) {
         throw new Error('No file returned from UploadThing');

@@ -1,4 +1,4 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Document, Schema, Model } from 'mongoose';
 
 export interface IShowroomContent extends Document {
   title: string;
@@ -52,4 +52,6 @@ const ShowroomContentSchema = new Schema<IShowroomContent>(
   }
 );
 
-export default mongoose.model<IShowroomContent>('ShowroomContent', ShowroomContentSchema);
+const ShowroomContent = (mongoose.models.ShowroomContent as Model<IShowroomContent>) || mongoose.model<IShowroomContent>('ShowroomContent', ShowroomContentSchema);
+
+export default ShowroomContent;

@@ -24,7 +24,6 @@ import {
 import { useAuth } from '@/hooks/useAuth';
 import { galleryService } from '@/lib/api';
 import SortableGalleryItem from '@/components/admin/SortableGalleryItem';
-import { DeleteConfirmModal } from '@/components/admin/DeleteConfirmModal';
 import { DeleteConfirmModalItem } from '@/components/admin/DeleteConfirmModalItem';
 import GalleryBulkActions from '@/components/admin/GalleryBulkActions';
 import type { GalleryImage } from '@/types';
@@ -234,7 +233,7 @@ export default function GalleryListPage() {
       setIsCleaningUp(true);
       setShowCleanupConfirm(false);
 
-      const response = await galleryService.cleanupOrphanedImages();
+      const response = await galleryService.cleanupOrphanedImages() as any;
 
       if (response.success && response.data) {
         const { deletedCount, cloudinaryDeletedCount } = response.data;
@@ -248,9 +247,9 @@ export default function GalleryListPage() {
           page: '1',
           limit: itemsPerPage.toString(),
         };
-        const refreshResponse = await galleryService.getImages(params);
+        const refreshResponse = await galleryService.getImages(params) as any;
         if (refreshResponse.success && refreshResponse.data) {
-          setImages(refreshResponse.data);
+          setImages(Array.isArray(refreshResponse.data) ? refreshResponse.data : []);
           setTotalPages(refreshResponse.pagination?.pages || 1);
           setTotalImages(refreshResponse.pagination?.total || 0);
         }

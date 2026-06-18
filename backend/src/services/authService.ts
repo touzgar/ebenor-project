@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { AdminUser, AdminUserDocument } from '../models/AdminUser';
 import { ApiError, ERROR_CODES } from '../middleware/errorHandler';
@@ -30,11 +30,14 @@ export class AuthService {
       iat: Math.floor(Date.now() / 1000),
     };
 
-    return jwt.sign(payload, this.jwtSecret, {
-      expiresIn: this.jwtExpiresIn,
+    // Explicitly type the SignOptions - cast expiresIn to satisfy StringValue type
+    const signOptions: SignOptions = {
+      expiresIn: this.jwtExpiresIn as any, // StringValue from 'ms' package
       issuer: 'ebenor-creation-api',
       audience: 'ebenor-creation-frontend',
-    });
+    };
+
+    return jwt.sign(payload, this.jwtSecret, signOptions);
   }
 
   /**

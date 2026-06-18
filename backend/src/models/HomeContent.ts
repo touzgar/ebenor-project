@@ -1,7 +1,12 @@
-import mongoose, { Schema, Document } from 'mongoose';
+import mongoose, { Schema, Model } from 'mongoose';
 import { HomeContent as IHomeContent } from '../types';
 
-export interface HomeContentDocument extends IHomeContent, Document {}
+// Omit _id from IHomeContent to avoid conflicts with Mongoose's _id
+type HomeContentBase = Omit<IHomeContent, '_id'>;
+
+export interface HomeContentDocument extends HomeContentBase, mongoose.Document {
+  toPublicJSON(): any;
+}
 
 const HomeContentSchema = new Schema<HomeContentDocument>({
   hero: {
@@ -80,4 +85,4 @@ HomeContentSchema.pre('save', function(next) {
   next();
 });
 
-export const HomeContent = mongoose.models.HomeContent || mongoose.model<HomeContentDocument>('HomeContent', HomeContentSchema);
+export const HomeContent = (mongoose.models.HomeContent as Model<HomeContentDocument>) || mongoose.model<HomeContentDocument>('HomeContent', HomeContentSchema);
