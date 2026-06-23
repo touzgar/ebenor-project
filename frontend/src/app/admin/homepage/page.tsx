@@ -199,50 +199,47 @@ export default function HomepageManagementPage() {
         </div>
       </div>
 
-      {/* Sections Grid - FULL WIDTH */}
+      {/* Sections List - Simple Clean Design Without Cards */}
       <div className="w-full px-3 sm:px-4 lg:px-6 py-6">
-        {/* Regular Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {sections.map((section, index) => (
-            <motion.div
-              key={section.name}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: index * 0.1 }}
-            >
-              <Link
-                href={section.href}
-                className="relative block h-full bg-white/60 backdrop-blur-sm rounded-xl shadow-sm border border-neutral-200/60 hover:shadow-2xl hover:border-amber-300 transition-all duration-200 overflow-hidden group transform-gpu hover:-translate-y-1"
+        <div className="bg-white rounded-lg shadow-sm border border-neutral-200 overflow-hidden">
+          <div className="divide-y divide-neutral-100">
+            {sections.map((section, index) => (
+              <motion.div
+                key={section.name}
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3, delay: index * 0.05 }}
               >
-                <div className={`h-2 bg-gradient-to-r ${section.color}`}></div>
-                <div className="p-6 lg:p-8">
-                  <div className="absolute top-3 right-3">
-                    <span className="text-xs px-2 py-0.5 bg-amber-100 text-amber-700 rounded-full font-semibold">Gérer</span>
+                <Link
+                  href={section.href}
+                  className="flex items-center justify-between p-4 sm:p-6 hover:bg-amber-50 transition-colors group"
+                >
+                  <div className="flex items-center gap-4 flex-1">
+                    <div className={`flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-lg bg-gradient-to-br ${section.color} text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}>
+                      {section.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-neutral-900 group-hover:text-amber-600 transition-colors mb-1">
+                        {section.name}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-neutral-600 line-clamp-2">
+                        {section.description}
+                      </p>
+                    </div>
                   </div>
-                  <div className={`inline-flex items-center justify-center w-16 h-16 lg:w-20 lg:h-20 rounded-xl bg-gradient-to-br ${section.color} text-white mb-4 lg:mb-5 group-hover:scale-105 transition-transform duration-200 shadow-md`}>
-                    {section.icon}
+                  <div className="flex-shrink-0 ml-4">
+                    <span className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 bg-amber-100 text-amber-700 rounded-lg text-xs sm:text-sm font-medium group-hover:bg-amber-600 group-hover:text-white transition-all">
+                      Modifier
+                      <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                    </span>
                   </div>
-                  <h3 className="text-lg lg:text-xl font-semibold text-neutral-900 mb-2 lg:mb-3 group-hover:text-amber-600 transition-colors">
-                    {section.name}
-                  </h3>
-                  <p className="text-neutral-600 text-sm lg:text-base leading-relaxed">
-                    {section.description}
-                  </p>
-                  <div className="mt-4 lg:mt-6 flex items-center text-amber-600 text-sm lg:text-base font-medium">
-                    <span>Modifier</span>
-                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </div>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
+                </Link>
+              </motion.div>
+            ))}
+          </div>
         </div>
-
-        {/* Help Section removed per request */}
-
-        {/* Quick actions removed per request - modernized layout */}
       </div>
     </div>
   );
