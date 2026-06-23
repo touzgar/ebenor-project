@@ -284,11 +284,9 @@ export default function AccueilAdminPage() {
   const uploadVideo = async (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
       const formData = new FormData();
-      formData.append('video', file);
-      formData.append('folder', 'videos/homepage');
-      
-      const token = localStorage.getItem('auth_token');
-      let csrfToken = sessionStorage.getItem('csrf_token');
+      formData.append('file', file);
+      formData.append('upload_preset', 'ebenor_videos'); // We'll create this
+      formData.append('folder', 'ebenor/videos/homepage');
       
       const xhr = new XMLHttpRequest();
       
@@ -307,7 +305,8 @@ export default function AccueilAdminPage() {
           try {
             const data = JSON.parse(xhr.responseText);
             console.log('✅ Upload response:', data);
-            resolve(data.data.url);
+            // Cloudinary returns secure_url
+            resolve(data.secure_url);
           } catch (e) {
             reject(new Error('Invalid response format'));
           }
@@ -322,17 +321,10 @@ export default function AccueilAdminPage() {
         reject(new Error('Network error during upload'));
       });
       
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
-      xhr.open('POST', `${backendUrl}/admin/upload/video`);
+      // Upload DIRECTLY to Cloudinary (no size limit!)
+      const cloudName = 'dfaqnx5j3'; // Your Cloudinary cloud name
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`);
       
-      if (token) {
-        xhr.setRequestHeader('Authorization', `Bearer ${token}`);
-      }
-      if (csrfToken) {
-        xhr.setRequestHeader('X-CSRF-Token', csrfToken);
-      }
-      
-      xhr.withCredentials = true;
       xhr.send(formData);
     });
   };
