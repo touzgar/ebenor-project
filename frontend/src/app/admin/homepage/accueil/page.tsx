@@ -569,10 +569,7 @@ export default function AccueilAdminPage() {
   const tabs = [
     { id: 'hero', label: '🎬 Hero Section', icon: '🎬' },
     { id: 'factory', label: '🏭 Atelier', icon: '🏭' },
-    { id: 'products', label: '🛋️ Produits', icon: '🛋️' },
     { id: 'woodCatalog', label: '🌳 Palette Bois', icon: '🌳' },
-    { id: 'gallery', label: '🖼️ Galerie', icon: '🖼️' },
-    { id: 'process', label: '⚙️ Processus', icon: '⚙️' },
     { id: 'cta', label: '📞 Call to Action', icon: '📞' },
     { id: 'footer', label: '📄 Footer', icon: '📄' },
   ];
