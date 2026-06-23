@@ -230,17 +230,17 @@ export default function MediaLibraryPage() {
   return (
     <div className="min-h-screen bg-neutral-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
+        {/* Header - Responsive */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-neutral-900">Bibliothèque de Médias</h1>
-              <p className="mt-2 text-neutral-600">
+              <h1 className="text-2xl sm:text-3xl font-bold text-neutral-900">Bibliothèque de Médias</h1>
+              <p className="mt-2 text-sm sm:text-base text-neutral-600">
                 Consultez tous vos fichiers médias en un seul endroit
               </p>
             </div>
-            {/* Cleanup Buttons */}
-            <div className="flex gap-3">
+            {/* Cleanup Buttons - Responsive */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
               {/* Delete ALL Gallery Images */}
               {media.length > 0 && (
                 <button
@@ -277,11 +277,11 @@ export default function MediaLibraryPage() {
                       setLoading(false);
                     }
                   }}
-                  className="px-4 py-2 bg-red-700 text-white rounded-lg hover:bg-red-800 transition-colors flex items-center gap-2 shadow-lg border-2 border-red-900"
+                  className="px-3 sm:px-4 py-2 bg-red-700 text-white text-sm rounded-lg hover:bg-red-800 transition-colors flex items-center justify-center gap-2 shadow-lg border-2 border-red-900 w-full sm:w-auto"
                   title="Supprimer TOUTES les images de la galerie"
                 >
-                  <TrashIcon className="h-5 w-5" />
-                  TOUT SUPPRIMER
+                  <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">TOUT SUPPRIMER</span>
                 </button>
               )}
               
@@ -305,75 +305,18 @@ export default function MediaLibraryPage() {
                       setLoading(false);
                     }
                   }}
-                  className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2 shadow-lg"
+                  className="px-3 sm:px-4 py-2 bg-orange-600 text-white text-sm rounded-lg hover:bg-orange-700 transition-colors flex items-center justify-center gap-2 shadow-lg w-full sm:w-auto"
                   title="Nettoyer les images orphelines"
                 >
-                  <TrashIcon className="h-5 w-5" />
-                  Nettoyer orphelines
+                  <TrashIcon className="h-4 w-4 sm:h-5 sm:w-5" />
+                  <span className="text-xs sm:text-sm font-medium">Nettoyer orphelines</span>
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Stats Cards */}
-        {stats && (
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Total Médias</p>
-                  <p className="text-2xl font-bold text-neutral-900">{stats.totalMedia}</p>
-                </div>
-                <PhotoIcon className="h-8 w-8 text-amber-600" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Images</p>
-                  <p className="text-2xl font-bold text-neutral-900">{stats.totalImages}</p>
-                </div>
-                <PhotoIcon className="h-8 w-8 text-blue-600" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Vidéos</p>
-                  <p className="text-2xl font-bold text-neutral-900">{stats.totalVideos}</p>
-                </div>
-                <VideoCameraIcon className="h-8 w-8 text-purple-600" />
-              </div>
-            </div>
-
-            <div className="bg-white rounded-lg shadow p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-neutral-600">Stockage</p>
-                  <p className="text-2xl font-bold text-neutral-900">
-                    {formatFileSize(stats.totalSize)}
-                  </p>
-                </div>
-                <svg
-                  className="h-8 w-8 text-green-600"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"
-                  />
-                </svg>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Stats Cards - REMOVED AS REQUESTED */}
 
         {/* Search and Filters */}
         <div className="bg-white rounded-lg shadow mb-6">

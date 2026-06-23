@@ -58,13 +58,25 @@ export default function AdminLoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Video Background */}
+      {/* Fallback Background Image for better UX */}
+      <div 
+        className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+        style={{
+          backgroundImage: 'url(https://images.unsplash.com/photo-1565183928294-7d22f75e6e37?w=1920&q=80)',
+        }}
+      />
+      
+      {/* Video Background - Only if video exists */}
       <video
         autoPlay
         loop
         muted
         playsInline
         className="absolute inset-0 w-full h-full object-cover"
+        onError={(e) => {
+          // Hide video if it fails to load
+          e.currentTarget.style.display = 'none';
+        }}
       >
         <source src="/video/admin.mp4" type="video/mp4" />
       </video>

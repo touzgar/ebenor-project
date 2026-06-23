@@ -390,48 +390,48 @@ export default function MessageDetailPage() {
         </div>
       </div>
 
-      {/* Reply Modal */}
+      {/* Reply Modal - Fully Responsive */}
       {showReplyModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden"
+            className="bg-white rounded-lg shadow-xl w-full max-w-full sm:max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col"
           >
             {/* Modal Header */}
-            <div className="bg-[#C9A14A] px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-white">Répondre par email</h2>
+            <div className="bg-[#C9A14A] px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-semibold text-white">Répondre par email</h2>
               <button
                 onClick={() => setShowReplyModal(false)}
-                className="text-white hover:text-gray-200 transition-colors"
+                className="text-white hover:text-gray-200 transition-colors p-1"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 max-h-[calc(90vh-160px)] overflow-y-auto">
+            {/* Modal Body - Scrollable */}
+            <div className="p-4 sm:p-6 overflow-y-auto flex-1">
               {/* Recipient Info */}
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center text-sm text-gray-600 mb-1">
+              <div className="mb-4 p-3 sm:p-4 bg-gray-50 rounded-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-600 mb-1 sm:mb-0">
                   <span className="font-medium">À :</span>
-                  <span className="ml-2">{message?.name} ({message?.email})</span>
+                  <span className="sm:ml-2 break-all">{message?.name} ({message?.email})</span>
                 </div>
-                <div className="flex items-center text-sm text-gray-600">
+                <div className="flex flex-col sm:flex-row sm:items-center text-xs sm:text-sm text-gray-600 mt-2 sm:mt-1">
                   <span className="font-medium">Sujet :</span>
-                  <span className="ml-2">Re: {message?.subject}</span>
+                  <span className="sm:ml-2 break-words">Re: {message?.subject}</span>
                 </div>
               </div>
 
               {/* Original Message */}
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Message original :
                 </label>
-                <div className="p-4 bg-gray-50 rounded-lg border-l-4 border-[#C9A14A]">
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{message?.message}</p>
+                <div className="p-3 sm:p-4 bg-gray-50 rounded-lg border-l-4 border-[#C9A14A] max-h-32 sm:max-h-40 overflow-y-auto">
+                  <p className="text-xs sm:text-sm text-gray-600 whitespace-pre-wrap break-words">{message?.message}</p>
                   <p className="text-xs text-gray-500 mt-2">
                     De {message?.name} le {message && formatDate(message.createdAt)}
                   </p>
@@ -440,15 +440,15 @@ export default function MessageDetailPage() {
 
               {/* Reply Text */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                   Votre réponse :
                 </label>
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Écrivez votre réponse ici..."
-                  rows={8}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A14A] focus:border-transparent resize-none"
+                  rows={6}
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#C9A14A] focus:border-transparent resize-none"
                 />
                 <p className="mt-2 text-xs text-gray-500">
                   Cette réponse sera envoyée par email à {message?.email}
@@ -457,21 +457,21 @@ export default function MessageDetailPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3">
+            <div className="bg-gray-50 px-4 sm:px-6 py-3 sm:py-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 sm:gap-3 flex-shrink-0">
               <button
                 onClick={() => {
                   setShowReplyModal(false);
                   setReplyText('');
                 }}
                 disabled={isSendingReply}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                className="px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
               >
                 Annuler
               </button>
               <button
                 onClick={handleSendReply}
                 disabled={isSendingReply || !replyText.trim()}
-                className="px-6 py-2 bg-[#C9A14A] text-white rounded-lg hover:bg-[#B8903A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="px-4 sm:px-6 py-2 bg-[#C9A14A] text-white text-sm rounded-lg hover:bg-[#B8903A] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSendingReply ? (
                   <>
@@ -479,14 +479,16 @@ export default function MessageDetailPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    Envoi en cours...
+                    <span className="hidden sm:inline">Envoi en cours...</span>
+                    <span className="sm:hidden">Envoi...</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
-                    Envoyer la réponse
+                    <span className="hidden sm:inline">Envoyer la réponse</span>
+                    <span className="sm:hidden">Envoyer</span>
                   </>
                 )}
               </button>
