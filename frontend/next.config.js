@@ -38,6 +38,24 @@ const nextConfig = {
   async headers() {
     return [
       {
+        // NO CACHE for HTML pages - always get fresh content
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'no-cache, no-store, must-revalidate, max-age=0',
+          },
+          {
+            key: 'Pragma',
+            value: 'no-cache',
+          },
+          {
+            key: 'Expires',
+            value: '0',
+          },
+        ],
+      },
+      {
         // Security headers for all routes
         source: '/(.*)',
         headers: [
