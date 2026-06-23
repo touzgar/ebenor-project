@@ -9,60 +9,32 @@ services:
     ports:
       - "27017:27017"  # Exposed for local development tools
 
-  # Backend - Development mode with hot reload
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile.dev
-    environment:
-      NODE_ENV: development
-      PORT: 5000
-      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
-      # MongoDB connection for development
-      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-ebenor-creation}?authSource=admin
-      # Load all other environment variables from .env
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
-      UPLOADTHING_APP_ID: ${UPLOADTHING_APP_ID}
-      UPLOADTHING_SECRET: ${UPLOADTHING_SECRET}
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      FROM_EMAIL: ${FROM_EMAIL}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
-      LOG_LEVEL: ${LOG_LEVEL:-debug}
-      LOG_FILE_PATH: ${LOG_FILE_PATH:-./logs}
-    volumes:
-      # Hot reload - mount source code
-      - ./backend/src:/app/src:ro
-      - ./backend/package.json:/app/package.json:ro
-      - ./backend/tsconfig.json:/app/tsconfig.json:ro
-      # Persistent data
-      - ./backend/logs:/app/logs
-      - ./backend/uploads:/app/uploads
-    ports:
-      - "5000:5000"
-      - "9229:9229"  # Node.js debugger port
-    command: npm run dev
-
-  # Frontend - Development mode with hot reload
+  # Frontend - Development mode with hot reload (with integrated API routes)
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev
     environment:
       NODE_ENV: development
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:5000/api}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-/api}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL:-http://localhost:3000}
       NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
+      # MongoDB connection for Next.js API routes
+      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-ebenor-creation}?authSource=admin
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # Email
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_SECURE: ${EMAIL_SECURE:-false}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
       NEXT_TELEMETRY_DISABLED: 1
     volumes:
       # Hot reload - mount source code
@@ -79,6 +51,9 @@ services:
       - /app/.next
     ports:
       - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
     command: npm run dev
 
 networks:

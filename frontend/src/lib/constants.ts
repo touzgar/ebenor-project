@@ -3,7 +3,7 @@ export const APP_CONFIG = {
   name: 'ÉBENOR CRÉATION',
   description: 'Fabrication de Bois Haut de Gamme en Tunisie',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
-  apiUrl: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
+  apiUrl: '/api', // ✅ FIXED: Now uses Next.js API routes instead of external server
   whatsappNumber: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+216XXXXXXXX',
 } as const;
 

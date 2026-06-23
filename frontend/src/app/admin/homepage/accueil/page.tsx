@@ -241,7 +241,7 @@ export default function AccueilAdminPage() {
     
     // Get CSRF token if not available
     if (!csrfToken) {
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       try {
         const csrfResponse = await fetch(`${backendUrl}/csrf-token`, {
           method: 'GET',
@@ -259,7 +259,7 @@ export default function AccueilAdminPage() {
       }
     }
     
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
     const response = await fetch(`${backendUrl}/admin/upload/image`, {
       method: 'POST',
       body: formData,
@@ -322,7 +322,7 @@ export default function AccueilAdminPage() {
         reject(new Error('Network error during upload'));
       });
       
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       xhr.open('POST', `${backendUrl}/admin/upload/video`);
       
       if (token) {
@@ -442,7 +442,7 @@ export default function AccueilAdminPage() {
       
       // If no CSRF token, fetch it from backend
       if (!csrfToken) {
-        const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+        const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
         const csrfResponse = await fetch(`${backendUrl}/csrf-token`, {
           method: 'GET',
           credentials: 'include',
@@ -457,7 +457,7 @@ export default function AccueilAdminPage() {
         }
       }
       
-      const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       
       // Save hero section
       const heroResponse = await fetch(`${backendUrl}/admin/home/hero`, {

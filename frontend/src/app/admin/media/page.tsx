@@ -33,7 +33,7 @@ interface MediaItem {
   uploadedAt: string;
   source: 'product' | 'gallery' | 'homepage';
   sourceId: string;
-  references: MediaReference[];
+  references?: MediaReference[]; // Made optional
 }
 
 interface MediaReference {
@@ -250,7 +250,7 @@ export default function MediaLibraryPage() {
                     try {
                       setLoading(true);
                       // Direct MongoDB delete all
-                      const response = await fetch('http://localhost:5000/api/admin/gallery/bulk', {
+                      const response = await fetch('/api/admin/gallery/bulk', {
                         method: 'POST',
                         headers: {
                           'Content-Type': 'application/json',
@@ -568,9 +568,9 @@ export default function MediaLibraryPage() {
                   </div>
 
                   {/* References Indicator */}
-                  {item.references.length > 0 && (
+                  {item.references && item.references.length > 0 && (
                     <div className="absolute bottom-3 left-3">
-                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/90 backdrop-blur-sm text-white shadow-lg flex items-center gap-1">
+                      <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-amber-500/90 backdrop-blur-sm text-white shadow-lg flex items-items gap-1">
                         <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                         </svg>

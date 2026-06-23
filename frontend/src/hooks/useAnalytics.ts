@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { onDashboardRefresh } from '@/lib/dashboardRefresh';
 import { useDashboardRefresh } from '@/contexts/DashboardContext';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 /**
  * Product statistics interface

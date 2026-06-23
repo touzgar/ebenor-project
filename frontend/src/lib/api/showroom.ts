@@ -2,7 +2,7 @@
  * Showroom API Client
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export interface ShowroomContent {
   _id: string;
@@ -49,9 +49,26 @@ export async function updateShowroomContent(
 ): Promise<ShowroomResponse> {
   try {
     const token = typeof window !== 'undefined' ? localStorage.getItem('auth_token') : null;
+    const csrfToken = typeof window !== 'undefined' ? sessionStorage.getItem('csrf_token') : null;
     
     if (!token) {
       throw new Error('Non authentifié. Veuillez vous reconnecter.');
+    }
+
+    // If no CSRF token, try to fetch one first
+    if (!csrfToken) {
+      try {
+        const csrfResponse = await fetch(`${API_BASE_URL}/csrf-token`, {
+          method: 'GET',
+          credentials: 'include',
+        });
+        const csrfData = await csrfResponse.json();
+        if (csrfData.success && csrfData.data?.csrfToken) {
+          sessionStorage.setItem('csrf_token', csrfData.data.csrfToken);
+        }
+      } catch (e) {
+        console.warn('Could not fetch CSRF token');
+      }
     }
 
     const response = await fetch(`${API_BASE_URL}/showroom`, {
@@ -59,6 +76,7 @@ export async function updateShowroomContent(
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
       },
       credentials: 'include',
       body: JSON.stringify(data),

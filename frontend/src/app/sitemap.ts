@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ebenor-creation.tn';
 
 interface Product {

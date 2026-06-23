@@ -119,7 +119,7 @@ export function DashboardStats() {
     },
     {
       title: 'Stockage',
-      value: galleryStats ? `${galleryStats.totalSize.toFixed(1)} MB` : '0 MB',
+      value: galleryStats && galleryStats.totalSize ? `${galleryStats.totalSize.toFixed(1)} MB` : '0 MB',
       subtitle: 'espace utilisé',
       color: 'purple' as const,
       loading: galleryLoading,

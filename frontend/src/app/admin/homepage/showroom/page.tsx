@@ -101,7 +101,7 @@ export default function ShowroomAdminPage() {
           router.push('/admin/login');
         }, 3000);
       } else if (err.message?.includes('Failed to fetch') || err.message?.includes('NetworkError')) {
-        setError('Erreur de connexion au serveur. Vérifiez que le backend est en cours d\'exécution sur http://localhost:5000');
+        setError('Erreur de connexion au serveur. Vérifiez que Next.js est en cours d\'exécution');
       } else {
         setError(err.message || 'Erreur lors de la sauvegarde. Veuillez réessayer.');
       }

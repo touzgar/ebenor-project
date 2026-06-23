@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+﻿import { NextRequest, NextResponse } from 'next/server';
 
 /**
+
+// Force dynamic rendering for this API route
+export const dynamic = 'force-dynamic';
+
  * API Route for Image Upload
  * 
  * This endpoint handles image uploads for the admin interface.
@@ -53,7 +57,7 @@ export async function POST(request: NextRequest) {
     const csrfToken = request.headers.get('x-csrf-token');
 
     // Forward the image to the backend API
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
     const backendFormData = new FormData();
     backendFormData.append('image', image);
 

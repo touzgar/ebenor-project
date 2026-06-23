@@ -1,0 +1,5 @@
+{
+  "setup": "npm install && npm install mongoose bcryptjs jsonwebtoken cloudinary nodemailer isomorphic-dompurify && npm install --save-dev @types/bcryptjs @types/jsonwebtoken @types/nodemailer",
+  "verify": "npm run type-check && npm run build",
+  "deploy": "vercel --prod"
+}

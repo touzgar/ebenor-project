@@ -25,18 +25,9 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 365, // 1 year
   },
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api',
     NEXT_PUBLIC_WHATSAPP_NUMBER: process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '+216XXXXXXXX',
   },
-  async rewrites() {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${apiUrl}/:path*`,
-      },
-    ];
-  },
+  // ✅ REMOVED: No proxy rewrites needed - API routes are now in Next.js
   async headers() {
     return [
       {
@@ -141,6 +132,11 @@ const nextConfig = {
   },
   // Completely suppress all webpack output and warnings
   webpack: (config, { dev, isServer }) => {
+    // Fix BSON/Mongoose compatibility issue in Next.js
+    if (isServer) {
+      config.externals = [...(config.externals || [])];
+    }
+    
     // Suppress all webpack output
     config.infrastructureLogging = {
       level: 'none',

@@ -16,7 +16,6 @@ services:
       - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
-      - ./backend/scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - ebenor-network
     healthcheck:
@@ -25,61 +24,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # Backend API - Express.js
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    container_name: ebenor-backend
-    restart: unless-stopped
-    environment:
-      NODE_ENV: production
-      PORT: ${BACKEND_PORT:-5000}
-      FRONTEND_URL: ${FRONTEND_URL}
-      # MongoDB connection built from environment variables
-      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-ebenor-creation}?authSource=admin
-      # Security
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-7d}
-      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
-      # Cloudinary
-      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
-      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
-      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
-      # UploadThing (optional)
-      UPLOADTHING_TOKEN: ${UPLOADTHING_TOKEN}
-      UPLOADTHING_APP_ID: ${UPLOADTHING_APP_ID}
-      UPLOADTHING_SECRET: ${UPLOADTHING_SECRET}
-      # Email
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      FROM_EMAIL: ${FROM_EMAIL}
-      ADMIN_EMAIL: ${ADMIN_EMAIL}
-      # Rate limiting
-      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-900000}
-      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
-      # Logging
-      LOG_LEVEL: ${LOG_LEVEL:-info}
-      LOG_FILE_PATH: ${LOG_FILE_PATH:-./logs}
-    ports:
-      - "${BACKEND_PORT:-5000}:5000"
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    volumes:
-      - ./backend/logs:/app/logs
-      - ./backend/uploads:/app/uploads
-    networks:
-      - ebenor-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:5000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  # Frontend - Next.js
+  # Frontend - Next.js (with integrated API routes)
   frontend:
     build:
       context: ./frontend
@@ -95,10 +40,26 @@ services:
       NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL}
       NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
       NEXT_PUBLIC_WHATSAPP_NUMBER: ${NEXT_PUBLIC_WHATSAPP_NUMBER}
+      # MongoDB connection for Next.js API routes
+      MONGODB_URI: mongodb://${MONGO_USERNAME}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE:-ebenor-creation}?authSource=admin
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+      CSRF_SECRET: ${CSRF_SECRET}
+      # Cloudinary
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
+      # Email
+      EMAIL_HOST: ${EMAIL_HOST}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_SECURE: ${EMAIL_SECURE:-false}
+      EMAIL_USER: ${EMAIL_USER}
+      EMAIL_PASS: ${EMAIL_PASS}
+      EMAIL_FROM: ${EMAIL_FROM}
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      backend:
+      mongodb:
         condition: service_healthy
     networks:
       - ebenor-network
@@ -121,7 +82,6 @@ services:
       - ./nginx/ssl:/etc/nginx/ssl:ro
     depends_on:
       - frontend
-      - backend
     networks:
       - ebenor-network
     profiles:
