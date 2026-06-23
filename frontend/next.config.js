@@ -1,7 +1,14 @@
 /** @type {import('next').NextConfig} */
-const withBundleAnalyzer = require('@next/bundle-analyzer')({
-  enabled: process.env.ANALYZE === 'true',
-});
+// Bundle analyzer - only load if package is available (dev environment)
+let withBundleAnalyzer;
+try {
+  withBundleAnalyzer = require('@next/bundle-analyzer')({
+    enabled: process.env.ANALYZE === 'true',
+  });
+} catch (e) {
+  // @next/bundle-analyzer not installed (production build)
+  withBundleAnalyzer = (config) => config;
+}
 
 const nextConfig = {
   images: {
