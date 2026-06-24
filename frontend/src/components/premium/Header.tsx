@@ -74,7 +74,7 @@ export function Header() {
           
           <div className="flex items-center h-20">
             
-            {/* Logo Premium with transparent logo */}
+            {/* Logo Premium with glass effect like hero section */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -82,21 +82,32 @@ export function Header() {
               className="flex items-center flex-shrink-0"
             >
               <Link href="/" className="group relative focus-visible-enhanced rounded-full" aria-label="ÉBÉNOR CRÉATION - Retour à l'accueil">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/95 backdrop-blur-sm shadow-2xl shadow-amber-500/30 relative p-2 ring-2 ring-amber-400/30 ring-offset-2 ring-offset-black/50">
+                {/* Glass morphism effect matching hero section */}
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full backdrop-blur-md bg-black/10 border-2 border-[#C9A14A]/40 shadow-2xl shadow-amber-500/20 relative p-2 hover:bg-black/20 hover:border-[#C9A14A]/60 transition-all duration-300">
                   <Image
                     src="/logo/logo-transparent.png"
                     alt="ÉBÉNOR CRÉATION - Logo"
                     width={48}
                     height={48}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain drop-shadow-lg"
                     priority
                   />
                   
-                  {/* Effet glow au hover - plus prononcé */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-300/40 to-amber-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+                  {/* Rotating glow effect on hover */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{
+                      background: 'conic-gradient(from 0deg, transparent, rgba(201, 161, 74, 0.3), transparent)'
+                    }}
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+                  />
                   
-                  {/* Effet pulse subtil */}
-                  <div className="absolute inset-0 rounded-full bg-amber-400/20 animate-ping opacity-75" style={{ animationDuration: '3s' }} />
+                  {/* Inner glow */}
+                  <div className="absolute inset-1 rounded-full bg-gradient-to-br from-amber-400/0 to-amber-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
+                  {/* Subtle pulse effect */}
+                  <div className="absolute inset-0 rounded-full bg-[#C9A14A]/10 animate-pulse" style={{ animationDuration: '4s' }} />
                 </div>
               </Link>
             </motion.div>
@@ -282,22 +293,22 @@ export function Header() {
               role="navigation"
               aria-label="Menu mobile"
             >
-              {/* Logo centré Premium with transparent logo */}
+              {/* Logo centré Premium with glass effect */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
                 className="mb-12"
               >
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/95 backdrop-blur-sm shadow-2xl shadow-amber-600/50 relative group p-3" aria-hidden="true">
+                <div className="inline-flex items-center justify-center w-24 h-24 rounded-full backdrop-blur-md bg-black/10 border-2 border-[#C9A14A]/40 shadow-2xl shadow-amber-600/30 relative group p-4" aria-hidden="true">
                   <Image
                     src="/logo/logo-transparent.png"
                     alt=""
-                    width={72}
-                    height={72}
-                    className="w-full h-full object-contain"
+                    width={96}
+                    height={96}
+                    className="w-full h-full object-contain drop-shadow-lg"
                   />
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
               </motion.div>
 
