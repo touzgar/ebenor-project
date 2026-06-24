@@ -169,11 +169,11 @@ export function Header() {
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.8, duration: 0.6 }}
-              className="hidden xl:flex items-center space-x-4 flex-shrink-0"
+              className="hidden md:flex items-center space-x-2 lg:space-x-4 flex-shrink-0"
             >
               <Link
                 href="/admin/login"
-                className="group relative px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-white/30 hover:border-[#C9A14A] hover:text-[#C9A14A] transition-all duration-300 transform hover:scale-105 focus-visible-enhanced backdrop-blur-sm bg-white/5 hover:bg-[#C9A14A]/10 shadow-lg hover:shadow-[#C9A14A]/30"
+                className="group relative px-3 lg:px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-white/30 hover:border-[#C9A14A] hover:text-[#C9A14A] transition-all duration-300 transform hover:scale-105 focus-visible-enhanced backdrop-blur-sm bg-white/5 hover:bg-[#C9A14A]/10 shadow-lg hover:shadow-[#C9A14A]/30"
                 aria-label="Connexion administrateur"
               >
                 <span className="relative z-10 tracking-wide flex items-center space-x-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
@@ -192,11 +192,11 @@ export function Header() {
               
               <Link
                 href="/contact"
-                className="group relative px-6 xl:px-8 py-2.5 xl:py-3 bg-gradient-to-r from-[#C9A14A] via-[#D4B55A] to-[#C9A14A] text-black font-bold text-xs xl:text-sm rounded-full overflow-hidden shadow-xl shadow-[#C9A14A]/50 hover:shadow-2xl hover:shadow-[#C9A14A]/70 transition-all duration-500 transform hover:scale-105 focus-visible-enhanced ring-2 ring-amber-400/30 ring-offset-2 ring-offset-black/50"
+                className="group relative px-4 lg:px-6 xl:px-8 py-2.5 xl:py-3 bg-gradient-to-r from-[#C9A14A] via-[#D4B55A] to-[#C9A14A] text-black font-bold text-xs xl:text-sm rounded-full overflow-hidden shadow-xl shadow-[#C9A14A]/50 hover:shadow-2xl hover:shadow-[#C9A14A]/70 transition-all duration-500 transform hover:scale-105 focus-visible-enhanced ring-2 ring-amber-400/30 ring-offset-2 ring-offset-black/50"
                 aria-label="Demander un devis - Aller à la page de contact"
               >
                 <span className="relative z-10 tracking-wide drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]">
-                  Demander un devis
+                  Devis
                 </span>
                 
                 {/* Effet shine au hover - plus prononcé */}
