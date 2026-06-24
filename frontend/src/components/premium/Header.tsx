@@ -74,7 +74,7 @@ export function Header() {
           
           <div className="flex items-center h-20">
             
-            {/* Logo Premium avec effet circulaire */}
+            {/* Logo Premium with transparent logo */}
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -82,13 +82,13 @@ export function Header() {
               className="flex items-center flex-shrink-0"
             >
               <Link href="/" className="group relative focus-visible-enhanced rounded-full" aria-label="ÉBÉNOR CRÉATION - Retour à l'accueil">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-gradient-to-br from-amber-500 via-amber-600 to-amber-700 shadow-2xl shadow-amber-500/60 relative p-1 ring-2 ring-amber-400/30 ring-offset-2 ring-offset-black/50">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-white/95 backdrop-blur-sm shadow-2xl shadow-amber-500/30 relative p-2 ring-2 ring-amber-400/30 ring-offset-2 ring-offset-black/50">
                   <Image
-                    src="/logo/logo.jpg"
+                    src="/logo/logo-transparent.png"
                     alt="ÉBÉNOR CRÉATION - Logo"
                     width={48}
                     height={48}
-                    className="w-12 h-12 rounded-full object-cover ring-1 ring-white/20"
+                    className="w-full h-full object-contain"
                     priority
                   />
                   
@@ -282,20 +282,20 @@ export function Header() {
               role="navigation"
               aria-label="Menu mobile"
             >
-              {/* Logo centré Premium */}
+              {/* Logo centré Premium with transparent logo */}
               <motion.div
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.2, duration: 0.6 }}
                 className="mb-12"
               >
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-amber-600 to-amber-700 shadow-2xl shadow-amber-600/50 relative group p-1" aria-hidden="true">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/95 backdrop-blur-sm shadow-2xl shadow-amber-600/50 relative group p-3" aria-hidden="true">
                   <Image
-                    src="/logo/logo.jpg"
+                    src="/logo/logo-transparent.png"
                     alt=""
                     width={72}
                     height={72}
-                    className="w-[4.5rem] h-[4.5rem] rounded-full object-cover"
+                    className="w-full h-full object-contain"
                   />
                   <div className="absolute inset-0 rounded-full bg-gradient-to-br from-amber-400/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 </div>
