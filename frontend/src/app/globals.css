@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 @layer base {
+  /* Critical Reset - Ensure full width on all pages */
+  html, body, #root, #__next {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+  }
+
   :root {
     --font-inter: 'Inter', system-ui, sans-serif;
     --font-playfair: 'Playfair Display', Georgia, serif;
@@ -16,15 +25,20 @@
     @apply bg-white text-neutral-900;
     font-feature-settings: "rlig" 1, "calt" 1;
     scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-serif;
-  }
-
-  /* Smooth scrolling for all browsers */
-  html {
-    scroll-behavior: smooth;
   }
 }
 

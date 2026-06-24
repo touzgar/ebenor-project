@@ -57,7 +57,7 @@ export default function AdminLoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+    <div className="min-h-screen w-full flex items-center justify-center relative overflow-hidden">
       {/* Fallback Background Image for better UX */}
       <div 
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
@@ -194,15 +194,15 @@ export default function AdminLoginPage() {
 
           {/* Back to site link */}
           <div className="mt-6 text-center">
-            <button
-              onClick={() => router.push('/')}
+            <a
+              href="/"
               className="inline-flex items-center text-sm text-neutral-400 hover:text-white transition-colors group"
             >
               <svg className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               Retour au site
-            </button>
+            </a>
           </div>
         </div>
 
