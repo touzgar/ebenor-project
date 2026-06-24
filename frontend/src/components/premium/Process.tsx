@@ -44,7 +44,7 @@ export function Process() {
   if (loading || !content) return null;
 
   return (
-    <section className="py-0 bg-[#0D0D0D] text-white relative overflow-hidden" ref={ref}>
+    <section className="py-0 bg-[#0D0D0D] text-white relative overflow-hidden hidden" ref={ref}>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{

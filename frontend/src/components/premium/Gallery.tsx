@@ -74,7 +74,7 @@ export function Gallery() {
 
   return (
     <>
-      <section className="py-0 bg-[#F5F5F5]" ref={ref}>
+      <section className="py-0 bg-[#F5F5F5] hidden" ref={ref}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Header */}
           <motion.div
