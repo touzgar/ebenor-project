@@ -229,14 +229,14 @@ export function HeroVideo() {
           }}
           className="mb-8 sm:mb-10"
         >
-          {/* Logo Circle */}
-          <div className="inline-flex items-center justify-center w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-2 border-[#C9A14A] p-2 mx-auto mb-8">
+          {/* Logo Circle with WHITE background */}
+          <div className="inline-flex items-center justify-center w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-2 border-[#C9A14A] bg-white p-4 mx-auto mb-8 shadow-2xl">
             <Image
               src="/logo/logo.jpg"
               alt="ÉBÉNOR CRÉATION Logo"
               width={160}
               height={160}
-              className="w-full h-full rounded-full object-cover"
+              className="w-full h-full object-contain"
               priority
             />
           </div>
