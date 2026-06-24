@@ -30,6 +30,20 @@ const defaultContent: WoodCatalogContent = {
   ],
 };
 
+// Optimize Cloudinary video URLs
+function optimizeCloudinaryVideo(url: string): string {
+  if (!url) return url;
+  
+  if (url.includes('cloudinary.com')) {
+    const parts = url.split('/upload/');
+    if (parts.length === 2) {
+      return `${parts[0]}/upload/q_auto:low,f_auto,w_1280,c_limit,br_500k/${parts[1]}`;
+    }
+  }
+  
+  return url;
+}
+
 export function WoodCatalog() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-100px' });
@@ -181,7 +195,7 @@ export function WoodCatalog() {
                 playsInline
                 className="w-full h-full object-cover"
               >
-                <source src={content.videoUrl} type="video/mp4" />
+                <source src={optimizeCloudinaryVideo(content.videoUrl)} type="video/mp4" />
               </video>
               
               {/* Subtle Overlay */}

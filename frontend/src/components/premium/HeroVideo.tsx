@@ -24,6 +24,23 @@ const defaultContent: HeroContent = {
   backgroundImage: "https://images.unsplash.com/photo-1615529182904-14819c35db37?w=1920",
 };
 
+// Optimize Cloudinary video URLs
+function optimizeCloudinaryVideo(url: string): string {
+  if (!url) return url;
+  
+  // Check if it's a Cloudinary URL
+  if (url.includes('cloudinary.com')) {
+    // Add quality and format optimizations
+    const parts = url.split('/upload/');
+    if (parts.length === 2) {
+      // Apply transformations: quality auto, format auto, width limit
+      return `${parts[0]}/upload/q_auto:low,f_auto,w_1920,c_limit/${parts[1]}`;
+    }
+  }
+  
+  return url;
+}
+
 export function HeroVideo() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -175,12 +192,13 @@ export function HeroVideo() {
           muted
           loop
           playsInline
+          preload="metadata"
           className="absolute inset-0 w-full h-full object-cover"
           onLoadedData={() => {
             // Video loaded successfully
           }}
         >
-          <source src={content?.videoUrl || defaultContent.videoUrl} type="video/mp4" />
+          <source src={optimizeCloudinaryVideo(content?.videoUrl || defaultContent.videoUrl)} type="video/mp4" />
           {/* Fallback image si la vidéo ne charge pas */}
           <div 
             className="absolute inset-0 w-full h-full bg-cover bg-center"

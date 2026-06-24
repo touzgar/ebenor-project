@@ -43,6 +43,22 @@ const defaultContent: FactoryContent = {
   ],
 };
 
+// Optimize Cloudinary video URLs to reduce size and loading time
+function optimizeCloudinaryVideo(url: string): string {
+  if (!url) return url;
+  
+  // Check if it's a Cloudinary URL
+  if (url.includes('cloudinary.com')) {
+    const parts = url.split('/upload/');
+    if (parts.length === 2) {
+      // Apply transformations: low quality, auto format, limit size, reduce bitrate
+      return `${parts[0]}/upload/q_auto:low,f_auto,w_1280,c_limit,br_500k/${parts[1]}`;
+    }
+  }
+  
+  return url;
+}
+
 export function FactoryShowcase() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
@@ -202,7 +218,7 @@ export function FactoryShowcase() {
                 playsInline
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
               >
-                <source src={content.video1Url} type="video/mp4" />
+                <source src={optimizeCloudinaryVideo(content.video1Url)} type="video/mp4" />
               </video>
               
               {/* Gradient Overlay */}
@@ -254,7 +270,7 @@ export function FactoryShowcase() {
                 playsInline
                 className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
               >
-                <source src={content.video2Url} type="video/mp4" />
+                <source src={optimizeCloudinaryVideo(content.video2Url)} type="video/mp4" />
               </video>
               
               {/* Gradient Overlay */}
