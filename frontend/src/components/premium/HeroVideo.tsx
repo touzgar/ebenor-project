@@ -218,7 +218,7 @@ export function HeroVideo() {
         style={{ y }}
         className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6"
       >
-        {/* Logo in Circle - TOP */}
+        {/* Logo in Circle - Transparent Logo Design */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -229,14 +229,14 @@ export function HeroVideo() {
           }}
           className="mb-8 sm:mb-10"
         >
-          {/* Logo Circle with WHITE background */}
-          <div className="inline-flex items-center justify-center w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-2 border-[#C9A14A] bg-white p-4 mx-auto mb-8 shadow-2xl">
+          {/* Logo Circle with transparent background and gold border */}
+          <div className="inline-flex items-center justify-center w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-52 lg:h-52 rounded-full border-2 border-[#C9A14A] mx-auto mb-8 backdrop-blur-sm bg-black/20">
             <Image
-              src="/logo/logo.jpg"
+              src="/logo/logo-transparent.png"
               alt="ÉBÉNOR CRÉATION Logo"
-              width={160}
-              height={160}
-              className="w-full h-full object-contain"
+              width={200}
+              height={200}
+              className="w-4/5 h-4/5 object-contain"
               priority
             />
           </div>
