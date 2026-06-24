@@ -51,18 +51,52 @@ export function FactoryShowcase() {
 
   useEffect(() => {
     setMounted(true);
-    // Load content from localStorage (set by admin panel)
-    const loadContent = () => {
+    
+    // Load content from DATABASE first, then localStorage as fallback
+    const loadContent = async () => {
       try {
+        console.log('🏭 FactoryShowcase: Fetching from database...');
+        const response = await fetch('/api/home', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.factory) {
+            console.log('✅ FactoryShowcase: Loaded from database');
+            setContent(data.data.factory);
+            return; // Exit early - we got data from database
+          }
+        }
+        
+        // Fallback to localStorage only if database fetch failed
+        console.log('⚠️ FactoryShowcase: Database fetch failed, trying localStorage');
         const saved = localStorage.getItem('homepage_content');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.factory) {
+            console.log('📦 FactoryShowcase: Loaded from localStorage fallback');
             setContent(parsed.factory);
           }
         }
       } catch (error) {
-        console.error('Error loading factory content:', error);
+        console.error('❌ Error loading factory content:', error);
+        // Try localStorage as ultimate fallback
+        try {
+          const saved = localStorage.getItem('homepage_content');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.factory) {
+              console.log('📦 FactoryShowcase: Loaded from localStorage (error fallback)');
+              setContent(parsed.factory);
+            }
+          }
+        } catch (e) {
+          console.error('❌ localStorage fallback also failed:', e);
+        }
       }
     };
 
@@ -70,6 +104,7 @@ export function FactoryShowcase() {
 
     // Listen for updates from admin panel
     const handleUpdate = () => {
+      console.log('🔄 FactoryShowcase: Received update event, reloading...');
       loadContent();
     };
 
@@ -82,6 +117,7 @@ export function FactoryShowcase() {
       channel = new BroadcastChannel('homepage_updates');
       channel.addEventListener('message', (event) => {
         if (event.data.type === 'update' && event.data.data.factory) {
+          console.log('📡 FactoryShowcase: Received BroadcastChannel update');
           setContent(event.data.data.factory);
         }
       });

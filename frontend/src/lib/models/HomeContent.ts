@@ -10,6 +10,55 @@ export interface IHomeContent {
     ctaText: string;
     ctaLink: string;
   };
+  factory?: {
+    title: string;
+    titleHighlight: string;
+    subtitle: string;
+    description: string;
+    backgroundImage?: string;
+    video1Url: string;
+    video1Title: string;
+    video1Description: string;
+    video2Url: string;
+    video2Title: string;
+    video2Description: string;
+    stats: Array<{
+      icon: string;
+      value: string;
+      label: string;
+    }>;
+  };
+  woodCatalog?: {
+    title: string;
+    titleHighlight: string;
+    description: string;
+    videoUrl: string;
+    badgeText: string;
+    woodSamples: Array<{
+      name: string;
+      color: string;
+      description: string;
+    }>;
+  };
+  cta?: {
+    badge: string;
+    title: string;
+    titleHighlight: string;
+    description: string;
+    button1Text: string;
+    button1Link: string;
+    button2Text: string;
+    button2Link: string;
+    phone: string;
+    email: string;
+    address: string;
+    backgroundImage?: string;
+    stats: Array<{
+      icon: string;
+      number: string;
+      label: string;
+    }>;
+  };
   about: {
     title: string;
     description: string;
@@ -61,6 +110,55 @@ const HomeContentSchema = new Schema<HomeContentDocument>({
     videoUrl: { type: String },
     ctaText: { type: String, required: true, maxlength: 50 },
     ctaLink: { type: String, required: true }
+  },
+  factory: {
+    title: { type: String, maxlength: 200 },
+    titleHighlight: { type: String, maxlength: 200 },
+    subtitle: { type: String, maxlength: 200 },
+    description: { type: String, maxlength: 2000 },
+    backgroundImage: { type: String },
+    video1Url: { type: String },
+    video1Title: { type: String, maxlength: 200 },
+    video1Description: { type: String, maxlength: 1000 },
+    video2Url: { type: String },
+    video2Title: { type: String, maxlength: 200 },
+    video2Description: { type: String, maxlength: 1000 },
+    stats: [{
+      icon: { type: String, maxlength: 50 },
+      value: { type: String, maxlength: 50 },
+      label: { type: String, maxlength: 100 }
+    }]
+  },
+  woodCatalog: {
+    title: { type: String, maxlength: 200 },
+    titleHighlight: { type: String, maxlength: 200 },
+    description: { type: String, maxlength: 500 },
+    videoUrl: { type: String },
+    badgeText: { type: String, maxlength: 200 },
+    woodSamples: [{
+      name: { type: String, maxlength: 100 },
+      color: { type: String, maxlength: 50 },
+      description: { type: String, maxlength: 200 }
+    }]
+  },
+  cta: {
+    badge: { type: String, maxlength: 200 },
+    title: { type: String, maxlength: 200 },
+    titleHighlight: { type: String, maxlength: 200 },
+    description: { type: String, maxlength: 1000 },
+    button1Text: { type: String, maxlength: 100 },
+    button1Link: { type: String, maxlength: 500 },
+    button2Text: { type: String, maxlength: 100 },
+    button2Link: { type: String, maxlength: 500 },
+    phone: { type: String, maxlength: 50 },
+    email: { type: String, maxlength: 100 },
+    address: { type: String, maxlength: 500 },
+    backgroundImage: { type: String },
+    stats: [{
+      icon: { type: String, maxlength: 50 },
+      number: { type: String, maxlength: 50 },
+      label: { type: String, maxlength: 100 }
+    }]
   },
   about: {
     title: { type: String, required: true, maxlength: 200 },

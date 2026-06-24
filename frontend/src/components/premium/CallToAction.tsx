@@ -56,13 +56,37 @@ export function CallToAction() {
   useEffect(() => {
     setMounted(true);
     
-    const loadContent = () => {
+    // Load content from DATABASE first, then localStorage as fallback
+    const loadContent = async () => {
       try {
+        console.log('📞 CallToAction: Fetching from database...');
+        const response = await fetch('/api/home', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.cta) {
+            console.log('✅ CallToAction: Loaded from database');
+            setContent({
+              ...defaultContent,
+              ...data.data.cta,
+              stats: data.data.cta.stats || defaultContent.stats
+            });
+            return; // Exit early - we got data from database
+          }
+        }
+        
+        // Fallback to localStorage only if database fetch failed
+        console.log('⚠️ CallToAction: Database fetch failed, trying localStorage');
         const saved = localStorage.getItem('homepage_content');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.cta) {
-            console.log('📞 CallToAction: Loading from localStorage');
+            console.log('📦 CallToAction: Loaded from localStorage fallback');
             setContent({
               ...defaultContent,
               ...parsed.cta,
@@ -71,7 +95,24 @@ export function CallToAction() {
           }
         }
       } catch (error) {
-        console.error('Error loading CTA content:', error);
+        console.error('❌ Error loading CTA content:', error);
+        // Try localStorage as ultimate fallback
+        try {
+          const saved = localStorage.getItem('homepage_content');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.cta) {
+              console.log('📦 CallToAction: Loaded from localStorage (error fallback)');
+              setContent({
+                ...defaultContent,
+                ...parsed.cta,
+                stats: parsed.cta.stats || defaultContent.stats
+              });
+            }
+          }
+        } catch (e) {
+          console.error('❌ localStorage fallback also failed:', e);
+        }
       }
     };
 
@@ -79,7 +120,7 @@ export function CallToAction() {
 
     // Listen for updates
     const handleUpdate = () => {
-      console.log('🔄 CallToAction: Received update event');
+      console.log('🔄 CallToAction: Received update event, reloading...');
       loadContent();
     };
 

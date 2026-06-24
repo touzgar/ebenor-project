@@ -36,14 +36,37 @@ export function WoodCatalog() {
   const [content, setContent] = useState<WoodCatalogContent>(defaultContent);
 
   useEffect(() => {
-    const loadContent = () => {
+    // Load content from DATABASE first, then localStorage as fallback
+    const loadContent = async () => {
       try {
+        console.log('🌳 WoodCatalog: Fetching from database...');
+        const response = await fetch('/api/home', {
+          cache: 'no-store',
+          headers: {
+            'Cache-Control': 'no-cache',
+          },
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.woodCatalog) {
+            console.log('✅ WoodCatalog: Loaded from database');
+            setContent({
+              ...defaultContent,
+              ...data.data.woodCatalog,
+              woodSamples: data.data.woodCatalog.woodSamples || defaultContent.woodSamples
+            });
+            return; // Exit early - we got data from database
+          }
+        }
+        
+        // Fallback to localStorage only if database fetch failed
+        console.log('⚠️ WoodCatalog: Database fetch failed, trying localStorage');
         const saved = localStorage.getItem('homepage_content');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.woodCatalog) {
-            console.log('🌳 WoodCatalog: Loading from localStorage');
-            // Merge with default content to ensure all fields exist
+            console.log('📦 WoodCatalog: Loaded from localStorage fallback');
             setContent({
               ...defaultContent,
               ...parsed.woodCatalog,
@@ -52,7 +75,24 @@ export function WoodCatalog() {
           }
         }
       } catch (error) {
-        console.error('Error loading wood catalog content:', error);
+        console.error('❌ Error loading wood catalog content:', error);
+        // Try localStorage as ultimate fallback
+        try {
+          const saved = localStorage.getItem('homepage_content');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed.woodCatalog) {
+              console.log('📦 WoodCatalog: Loaded from localStorage (error fallback)');
+              setContent({
+                ...defaultContent,
+                ...parsed.woodCatalog,
+                woodSamples: parsed.woodCatalog.woodSamples || defaultContent.woodSamples
+              });
+            }
+          }
+        } catch (e) {
+          console.error('❌ localStorage fallback also failed:', e);
+        }
       }
     };
 
@@ -60,7 +100,7 @@ export function WoodCatalog() {
 
     // Listen for updates
     const handleUpdate = () => {
-      console.log('🔄 WoodCatalog: Received update event');
+      console.log('🔄 WoodCatalog: Received update event, reloading...');
       loadContent();
     };
 
