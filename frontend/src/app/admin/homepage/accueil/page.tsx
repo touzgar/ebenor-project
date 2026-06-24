@@ -451,7 +451,10 @@ export default function AccueilAdminPage() {
       
       const backendUrl = process.env.NEXT_PUBLIC_API_URL || '/api';
       
-      // Save hero section
+      // Save ALL sections to database
+      console.log('💾 Saving all sections to database...');
+      
+      // 1. Save hero section
       const heroResponse = await fetch(`${backendUrl}/admin/home/hero`, {
         method: 'PUT',
         credentials: 'include',
@@ -465,7 +468,65 @@ export default function AccueilAdminPage() {
 
       if (!heroResponse.ok) {
         const errorData = await heroResponse.json();
-        throw new Error(errorData.message || 'Erreur lors de la sauvegarde');
+        throw new Error(errorData.message || 'Erreur lors de la sauvegarde du hero');
+      }
+      console.log('✅ Hero section saved to database');
+      
+      // 2. Save factory section
+      try {
+        const factoryResponse = await fetch(`${backendUrl}/admin/home/factory`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
+          },
+          body: JSON.stringify(content.factory),
+        });
+        if (factoryResponse.ok) {
+          console.log('✅ Factory section saved to database');
+        }
+      } catch (e) {
+        console.warn('⚠️ Factory endpoint not available yet');
+      }
+      
+      // 3. Save wood catalog section
+      try {
+        const woodResponse = await fetch(`${backendUrl}/admin/home/wood-catalog`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
+          },
+          body: JSON.stringify(content.woodCatalog),
+        });
+        if (woodResponse.ok) {
+          console.log('✅ Wood catalog section saved to database');
+        }
+      } catch (e) {
+        console.warn('⚠️ Wood catalog endpoint not available yet');
+      }
+      
+      // 4. Save CTA section
+      try {
+        const ctaResponse = await fetch(`${backendUrl}/admin/home/cta`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...(csrfToken && { 'X-CSRF-Token': csrfToken }),
+          },
+          body: JSON.stringify(content.cta),
+        });
+        if (ctaResponse.ok) {
+          console.log('✅ CTA section saved to database');
+        }
+      } catch (e) {
+        console.warn('⚠️ CTA endpoint not available yet');
       }
       
       // Trigger update events for real-time sync
