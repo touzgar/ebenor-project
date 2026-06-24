@@ -165,7 +165,7 @@ export function FactoryShowcase() {
   }));
 
   return (
-    <section ref={ref} className="py-24 lg:py-32 bg-gradient-to-b from-[#0D0D0D] via-[#1a1a1a] to-[#0D0D0D] relative overflow-hidden" suppressHydrationWarning>
+    <section ref={ref} className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gradient-to-b from-[#0D0D0D] via-[#1a1a1a] to-[#0D0D0D] relative overflow-hidden" suppressHydrationWarning>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{
@@ -179,29 +179,29 @@ export function FactoryShowcase() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-16 lg:mb-20"
+          className="text-center mb-10 sm:mb-12 lg:mb-16 xl:mb-20"
         >
           <motion.div
             initial={{ scale: 0 }}
             animate={isInView ? { scale: 1 } : {}}
             transition={{ delay: 0.2, duration: 0.6, type: "spring" }}
-            className="inline-block mb-4"
+            className="inline-block mb-3 sm:mb-4"
           >
-            <span className="px-6 py-2 bg-gradient-to-r from-[#C9A14A]/20 to-transparent border border-[#C9A14A]/30 rounded-full text-[#C9A14A] font-semibold tracking-wider uppercase text-sm">
+            <span className="px-4 sm:px-6 py-1.5 sm:py-2 bg-gradient-to-r from-[#C9A14A]/20 to-transparent border border-[#C9A14A]/30 rounded-full text-[#C9A14A] font-semibold tracking-wider uppercase text-xs sm:text-sm">
               Notre Excellence
             </span>
           </motion.div>
           
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-6 leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-serif text-white mb-4 sm:mb-6 leading-tight px-4">
             {content.title} <span className="text-[#C9A14A]">{content.titleHighlight}</span>
           </h2>
-          <p className="text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-gray-300 max-w-3xl mx-auto leading-relaxed px-4">
             {content.description}
           </p>
         </motion.div>
 
         {/* Videos Grid - Bigger and Cleaner */}
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 mb-20">
+        <div className="grid lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-12 sm:mb-16 lg:mb-20">
           {/* Video 1 */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
@@ -225,20 +225,20 @@ export function FactoryShowcase() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:from-black/70 transition-all duration-500" />
               
               {/* Content */}
-              <div className="absolute inset-0 p-8 lg:p-10 flex flex-col justify-end">
+              <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 0.6, duration: 0.6 }}
                 >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full mb-4">
-                    <HiSparkles className="w-5 h-5 text-[#C9A14A]" />
-                    <span className="text-[#C9A14A] font-semibold text-sm">Artisanat d'Excellence</span>
+                  <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full mb-3 sm:mb-4">
+                    <HiSparkles className="w-4 h-4 sm:w-5 sm:h-5 text-[#C9A14A]" />
+                    <span className="text-[#C9A14A] font-semibold text-xs sm:text-sm">Artisanat d'Excellence</span>
                   </div>
-                  <h3 className="text-3xl lg:text-4xl font-serif text-white mb-3 leading-tight">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif text-white mb-2 sm:mb-3 leading-tight">
                     {content.video1Title}
                   </h3>
-                  <p className="text-gray-200 text-lg leading-relaxed max-w-md">
+                  <p className="text-gray-200 text-sm sm:text-base md:text-lg leading-relaxed max-w-md">
                     {content.video1Description}
                   </p>
                 </motion.div>
@@ -277,20 +277,20 @@ export function FactoryShowcase() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent group-hover:from-black/70 transition-all duration-500" />
               
               {/* Content */}
-              <div className="absolute inset-0 p-8 lg:p-10 flex flex-col justify-end">
+              <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={isInView ? { opacity: 1, y: 0 } : {}}
                   transition={{ delay: 0.8, duration: 0.6 }}
                 >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full mb-4">
-                    <HiLightningBolt className="w-5 h-5 text-[#C9A14A]" />
-                    <span className="text-[#C9A14A] font-semibold text-sm">Innovation Technologique</span>
+                  <div className="inline-flex items-center gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full mb-3 sm:mb-4">
+                    <HiLightningBolt className="w-4 h-4 sm:w-5 sm:h-5 text-[#C9A14A]" />
+                    <span className="text-[#C9A14A] font-semibold text-xs sm:text-sm">Innovation Technologique</span>
                   </div>
-                  <h3 className="text-3xl lg:text-4xl font-serif text-white mb-3 leading-tight">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-serif text-white mb-2 sm:mb-3 leading-tight">
                     {content.video2Title}
                   </h3>
-                  <p className="text-gray-200 text-lg leading-relaxed max-w-md">
+                  <p className="text-gray-200 text-sm sm:text-base md:text-lg leading-relaxed max-w-md">
                     {content.video2Description}
                   </p>
                 </motion.div>
@@ -312,7 +312,7 @@ export function FactoryShowcase() {
           initial={{ opacity: 0, y: 40 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.7 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8"
+          className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-8"
         >
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
@@ -324,19 +324,19 @@ export function FactoryShowcase() {
                 transition={{ delay: 0.8 + index * 0.1, duration: 0.5, type: "spring" }}
                 className="relative group"
               >
-                <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-3xl p-8 border border-white/10 hover:border-[#C9A14A]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A14A]/20 hover:-translate-y-2">
+                <div className="bg-gradient-to-br from-white/5 to-white/[0.02] backdrop-blur-sm rounded-2xl sm:rounded-3xl p-5 sm:p-6 md:p-8 border border-white/10 hover:border-[#C9A14A]/40 transition-all duration-500 hover:shadow-2xl hover:shadow-[#C9A14A]/20 hover:-translate-y-2">
                   {/* Icon */}
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                    <IconComponent className="w-7 h-7 text-white" />
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-2xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-4 sm:mb-5 md:mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                    <IconComponent className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-white" />
                   </div>
                   
                   {/* Number */}
-                  <div className="text-5xl lg:text-6xl font-bold bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent mb-3">
+                  <div className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold bg-gradient-to-br from-white to-gray-300 bg-clip-text text-transparent mb-2 sm:mb-3">
                     {stat.number}
                   </div>
                   
                   {/* Label */}
-                  <div className="text-gray-400 uppercase tracking-wider text-sm font-semibold leading-tight">
+                  <div className="text-gray-400 uppercase tracking-wider text-xs sm:text-sm font-semibold leading-tight">
                     {stat.label}
                   </div>
                   

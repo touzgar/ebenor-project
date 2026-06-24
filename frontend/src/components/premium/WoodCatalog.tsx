@@ -148,7 +148,7 @@ export function WoodCatalog() {
   }, []);
 
   return (
-    <section ref={ref} className="py-0 bg-[#F5F5F5] relative overflow-hidden" suppressHydrationWarning>
+    <section ref={ref} className="py-12 sm:py-16 md:py-20 lg:py-24 bg-[#F5F5F5] relative overflow-hidden" suppressHydrationWarning>
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#C9A14A]/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#C9A14A]/5 rounded-full blur-3xl" />
@@ -159,19 +159,19 @@ export function WoodCatalog() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8 }}
-          className="text-center mb-2"
+          className="text-center mb-8 sm:mb-10 md:mb-12"
         >
           <motion.div
             initial={{ width: 0 }}
             animate={isInView ? { width: "80px" } : {}}
             transition={{ delay: 0.3, duration: 0.8 }}
-            className="h-1 bg-gradient-to-r from-transparent via-[#C9A14A] to-transparent mx-auto mb-2"
+            className="h-1 bg-gradient-to-r from-transparent via-[#C9A14A] to-transparent mx-auto mb-3 sm:mb-4"
           />
           
-          <h2 className="text-4xl md:text-5xl font-bold text-[#0D0D0D] mb-2">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0D0D0D] mb-3 sm:mb-4 px-4">
             {content.title} <span className="text-[#C9A14A]">{content.titleHighlight}</span>
           </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto px-4">
             {content.description}
           </p>
         </motion.div>
@@ -181,10 +181,10 @@ export function WoodCatalog() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={isInView ? { opacity: 1, scale: 1 } : {}}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative max-w-5xl mx-auto"
+          className="relative max-w-5xl mx-auto mb-12 sm:mb-16"
         >
           {/* Premium Frame */}
-          <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-[#C9A14A]/20">
+          <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl border-2 sm:border-4 border-[#C9A14A]/20">
             {/* Video */}
             <div className="relative aspect-video bg-black">
               <video
@@ -202,11 +202,11 @@ export function WoodCatalog() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
             </div>
 
-            {/* Decorative Corners */}
-            <div className="absolute top-4 left-4 w-12 h-12 border-t-2 border-l-2 border-[#C9A14A]" />
-            <div className="absolute top-4 right-4 w-12 h-12 border-t-2 border-r-2 border-[#C9A14A]" />
-            <div className="absolute bottom-4 left-4 w-12 h-12 border-b-2 border-l-2 border-[#C9A14A]" />
-            <div className="absolute bottom-4 right-4 w-12 h-12 border-b-2 border-r-2 border-[#C9A14A]" />
+            {/* Decorative Corners - Hide on very small screens */}
+            <div className="hidden sm:block absolute top-4 left-4 w-8 h-8 sm:w-12 sm:h-12 border-t-2 border-l-2 border-[#C9A14A]" />
+            <div className="hidden sm:block absolute top-4 right-4 w-8 h-8 sm:w-12 sm:h-12 border-t-2 border-r-2 border-[#C9A14A]" />
+            <div className="hidden sm:block absolute bottom-4 left-4 w-8 h-8 sm:w-12 sm:h-12 border-b-2 border-l-2 border-[#C9A14A]" />
+            <div className="hidden sm:block absolute bottom-4 right-4 w-8 h-8 sm:w-12 sm:h-12 border-b-2 border-r-2 border-[#C9A14A]" />
           </div>
 
           {/* Floating Badge */}
@@ -214,10 +214,10 @@ export function WoodCatalog() {
             initial={{ opacity: 0, y: 20 }}
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="absolute -bottom-6 left-1/2 transform -translate-x-1/2"
+            className="absolute -bottom-4 sm:-bottom-6 left-1/2 transform -translate-x-1/2 px-4"
           >
-            <div className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-8 py-0 rounded-full shadow-xl">
-              <p className="font-semibold text-sm tracking-wide">
+            <div className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-4 sm:px-8 py-2 sm:py-3 rounded-full shadow-xl">
+              <p className="font-semibold text-xs sm:text-sm tracking-wide whitespace-nowrap">
                 {content.badgeText}
               </p>
             </div>
@@ -229,7 +229,7 @@ export function WoodCatalog() {
           initial={{ opacity: 0, y: 30 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.4 }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-0"
+          className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 md:gap-6"
         >
           {(content.woodSamples || defaultContent.woodSamples).map((wood, index) => (
             <motion.div
@@ -239,18 +239,18 @@ export function WoodCatalog() {
               transition={{ delay: 0.6 + index * 0.1, duration: 0.6 }}
               className="group"
             >
-              <div className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#C9A14A]/50">
+              <div className="bg-white rounded-xl p-4 sm:p-5 md:p-6 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-200 hover:border-[#C9A14A]/50">
                 {/* Color Sample */}
                 <div 
-                  className="w-full h-24 rounded-lg mb-2 shadow-inner"
+                  className="w-full h-20 sm:h-24 rounded-lg mb-2 sm:mb-3 shadow-inner"
                   style={{ backgroundColor: wood.color }}
                 />
                 
                 {/* Wood Info */}
-                <h3 className="text-lg font-bold text-[#0D0D0D] mb-2">
+                <h3 className="text-base sm:text-lg font-bold text-[#0D0D0D] mb-1 sm:mb-2">
                   {wood.name}
                 </h3>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600">
                   {wood.description}
                 </p>
               </div>

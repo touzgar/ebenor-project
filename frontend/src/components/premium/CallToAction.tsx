@@ -154,7 +154,7 @@ export function CallToAction() {
   }, []);
 
   return (
-    <section className="relative py-32 lg:py-40 overflow-hidden" ref={ref} suppressHydrationWarning>
+    <section className="relative py-16 sm:py-24 lg:py-32 xl:py-40 overflow-hidden" ref={ref} suppressHydrationWarning>
       {/* Background Image - Full Coverage */}
       <div className="absolute inset-0" key={content.backgroundImage}>
         <div
@@ -168,7 +168,7 @@ export function CallToAction() {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+        <div className="grid lg:grid-cols-2 gap-10 sm:gap-12 lg:gap-16 items-center">
           {/* Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -180,7 +180,7 @@ export function CallToAction() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="inline-block px-4 py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full border border-[#C9A14A]/30 text-[#C9A14A] font-semibold tracking-wider uppercase text-sm mb-6"
+              className="inline-block px-3 sm:px-4 py-1.5 sm:py-2 bg-[#C9A14A]/20 backdrop-blur-sm rounded-full border border-[#C9A14A]/30 text-[#C9A14A] font-semibold tracking-wider uppercase text-xs sm:text-sm mb-4 sm:mb-6"
             >
               {content.badge}
             </motion.span>
@@ -189,7 +189,7 @@ export function CallToAction() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-5xl md:text-6xl lg:text-7xl font-serif mb-6 leading-tight"
+              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-serif mb-4 sm:mb-6 leading-tight"
             >
               {content.title}
               <br />
@@ -200,7 +200,7 @@ export function CallToAction() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-xl text-gray-200 mb-10 leading-relaxed max-w-xl"
+              className="text-base sm:text-lg md:text-xl text-gray-200 mb-6 sm:mb-8 md:mb-10 leading-relaxed max-w-xl"
             >
               {content.description}
             </motion.p>
@@ -209,16 +209,16 @@ export function CallToAction() {
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ delay: 0.5, duration: 0.6 }}
-              className="flex flex-col sm:flex-row gap-4 mb-10"
+              className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-6 sm:mb-8 md:mb-10"
             >
               <Link href={content.button1Link}>
-                <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-10 py-5 rounded-full font-semibold text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/40 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
+                <button className="bg-gradient-to-r from-[#C9A14A] to-[#D4B55A] text-black px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-full font-semibold text-base sm:text-lg hover:shadow-2xl hover:shadow-[#C9A14A]/40 transition-all duration-300 transform hover:scale-105 w-full sm:w-auto">
                   {content.button1Text}
                 </button>
               </Link>
               
               <Link href={content.button2Link}>
-                <button className="border-2 border-white text-white px-10 py-5 rounded-full font-semibold text-lg hover:bg-white hover:text-black transition-all duration-300 backdrop-blur-sm w-full sm:w-auto">
+                <button className="border-2 border-white text-white px-6 sm:px-8 md:px-10 py-3 sm:py-4 md:py-5 rounded-full font-semibold text-base sm:text-lg hover:bg-white hover:text-black transition-all duration-300 backdrop-blur-sm w-full sm:w-auto">
                   {content.button2Text}
                 </button>
               </Link>
@@ -230,19 +230,19 @@ export function CallToAction() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ delay: 0.6, duration: 0.6 }}
-                className="space-y-4 bg-black/30 backdrop-blur-md rounded-2xl p-6 border border-white/10"
+                className="space-y-3 sm:space-y-4 bg-black/30 backdrop-blur-md rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 border border-white/10"
               >
                 <a href={`tel:${content.phone}`} className="flex items-center text-gray-200 hover:text-white transition-colors">
-                  <HiPhone className="w-6 h-6 text-[#C9A14A] mr-4" />
-                  <span className="text-lg">{content.phone}</span>
+                  <HiPhone className="w-5 h-5 sm:w-6 sm:h-6 text-[#C9A14A] mr-3 sm:mr-4 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg">{content.phone}</span>
                 </a>
                 <a href={`mailto:${content.email}`} className="flex items-center text-gray-200 hover:text-white transition-colors">
-                  <HiMail className="w-6 h-6 text-[#C9A14A] mr-4" />
-                  <span className="text-lg">{content.email}</span>
+                  <HiMail className="w-5 h-5 sm:w-6 sm:h-6 text-[#C9A14A] mr-3 sm:mr-4 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg break-all">{content.email}</span>
                 </a>
                 <div className="flex items-center text-gray-200 hover:text-white transition-colors">
-                  <HiLocationMarker className="w-6 h-6 text-[#C9A14A] mr-4 flex-shrink-0" />
-                  <span className="text-lg">{content.address}</span>
+                  <HiLocationMarker className="w-5 h-5 sm:w-6 sm:h-6 text-[#C9A14A] mr-3 sm:mr-4 flex-shrink-0" />
+                  <span className="text-sm sm:text-base md:text-lg">{content.address}</span>
                 </div>
               </motion.div>
             )}
@@ -253,7 +253,7 @@ export function CallToAction() {
             initial={{ opacity: 0, x: 50 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2, ease: 'easeOut' }}
-            className="grid grid-cols-2 gap-6"
+            className="grid grid-cols-2 gap-3 sm:gap-4 md:gap-6"
           >
             {(content.stats || defaultContent.stats).map((stat, index) => (
               <motion.div
@@ -261,11 +261,11 @@ export function CallToAction() {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
                 transition={{ delay: 0.4 + index * 0.1, duration: 0.6, type: "spring" }}
-                className="text-center bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20 hover:bg-white/15 hover:border-[#C9A14A]/50 transition-all duration-300 hover:scale-105"
+                className="text-center bg-white/10 backdrop-blur-md rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border border-white/20 hover:bg-white/15 hover:border-[#C9A14A]/50 transition-all duration-300 hover:scale-105"
               >
-                <div className="text-5xl mb-4">{stat.icon}</div>
-                <div className="text-5xl font-bold text-[#C9A14A] mb-3">{stat.number}</div>
-                <div className="text-sm text-gray-200 uppercase tracking-wide font-medium">{stat.label}</div>
+                <div className="text-3xl sm:text-4xl md:text-5xl mb-2 sm:mb-3 md:mb-4">{stat.icon}</div>
+                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#C9A14A] mb-2 sm:mb-3">{stat.number}</div>
+                <div className="text-xs sm:text-sm text-gray-200 uppercase tracking-wide font-medium leading-tight">{stat.label}</div>
               </motion.div>
             ))}
           </motion.div>
