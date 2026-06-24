@@ -28,6 +28,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'ÉBÉNOR CRÉATION' }],
   creator: 'ÉBÉNOR CRÉATION',
   publisher: 'ÉBÉNOR CRÉATION',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 5,
+  },
   formatDetection: {
     email: false,
     address: false,
