@@ -18,6 +18,12 @@ const playfair = Playfair_Display({
   display: 'swap',
 });
 
+export const viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+};
+
 export const metadata: Metadata = {
   title: {
     default: 'ÉBÉNOR CRÉATION - L\'élégance du bois, l\'empreinte de l\'art',
@@ -28,11 +34,6 @@ export const metadata: Metadata = {
   authors: [{ name: 'ÉBÉNOR CRÉATION' }],
   creator: 'ÉBÉNOR CRÉATION',
   publisher: 'ÉBÉNOR CRÉATION',
-  viewport: {
-    width: 'device-width',
-    initialScale: 1,
-    maximumScale: 5,
-  },
   formatDetection: {
     email: false,
     address: false,
