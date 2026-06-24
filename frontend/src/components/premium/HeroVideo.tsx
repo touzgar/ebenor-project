@@ -230,13 +230,13 @@ export function HeroVideo() {
           className="mb-8 sm:mb-10"
         >
           {/* Logo Circle with transparent background and gold border */}
-          <div className="inline-flex items-center justify-center w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-52 lg:h-52 rounded-full border-2 border-[#C9A14A] mx-auto mb-8 backdrop-blur-sm bg-black/20">
+          <div className="inline-flex items-center justify-center w-40 h-40 sm:w-44 sm:h-44 md:w-48 md:h-48 lg:w-52 lg:h-52 rounded-full border-2 border-[#C9A14A] mx-auto mb-8 backdrop-blur-sm bg-black/20 p-3">
             <Image
               src="/logo/logo-transparent.png"
               alt="ÉBÉNOR CRÉATION Logo"
-              width={200}
-              height={200}
-              className="w-4/5 h-4/5 object-contain"
+              width={220}
+              height={220}
+              className="w-full h-full object-contain"
               priority
             />
           </div>
