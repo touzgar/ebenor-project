@@ -66,7 +66,7 @@ export default function AdminLoginPage() {
         }}
       />
       
-      {/* Video Background - Only if video exists */}
+      {/* Video Background - Cloudinary hosted */}
       <video
         autoPlay
         loop
@@ -78,7 +78,7 @@ export default function AdminLoginPage() {
           e.currentTarget.style.display = 'none';
         }}
       >
-        <source src="/video/admin.mp4" type="video/mp4" />
+        <source src="https://res.cloudinary.com/dfaqnx5j3/video/upload/admin_dmgatq.mp4" type="video/mp4" />
       </video>
       
       {/* Dark overlay for better readability */}
