@@ -165,7 +165,7 @@ export function FactoryShowcase() {
   }));
 
   return (
-    <section ref={ref} className="py-16 sm:py-20 lg:py-24 xl:py-32 bg-gradient-to-b from-[#0D0D0D] via-[#1a1a1a] to-[#0D0D0D] relative overflow-hidden" suppressHydrationWarning>
+    <section ref={ref} className="pt-16 sm:pt-20 lg:pt-24 xl:pt-32 pb-8 sm:pb-10 lg:pb-12 bg-gradient-to-b from-[#0D0D0D] via-[#1a1a1a] to-[#0D0D0D] relative overflow-hidden" suppressHydrationWarning>
       {/* Background Pattern */}
       <div className="absolute inset-0 opacity-5">
         <div className="absolute inset-0" style={{

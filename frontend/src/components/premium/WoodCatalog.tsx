@@ -148,7 +148,7 @@ export function WoodCatalog() {
   }, []);
 
   return (
-    <section ref={ref} className="pt-4 sm:pt-6 md:pt-8 pb-12 sm:pb-16 md:pb-20 lg:pb-24 bg-[#F5F5F5] relative overflow-hidden" suppressHydrationWarning>
+    <section ref={ref} className="pt-0 pb-12 sm:pb-16 md:pb-20 lg:pb-24 bg-[#F5F5F5] relative overflow-hidden" suppressHydrationWarning>
       {/* Decorative Elements */}
       <div className="absolute top-0 left-0 w-64 h-64 bg-[#C9A14A]/5 rounded-full blur-3xl" />
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#C9A14A]/5 rounded-full blur-3xl" />
