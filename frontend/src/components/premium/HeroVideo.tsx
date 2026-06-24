@@ -3,6 +3,7 @@
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
 import { HiArrowDown } from 'react-icons/hi';
+import Image from 'next/image';
 
 interface HeroContent {
   companyName: string;
@@ -217,7 +218,7 @@ export function HeroVideo() {
         style={{ y }}
         className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6"
       >
-        {/* Logo Premium et Nom de l'Usine */}
+        {/* Logo in Circle - TOP */}
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -226,37 +227,35 @@ export function HeroVideo() {
             delay: 0.2,
             ease: "easeOut"
           }}
-          className="mb-4 sm:mb-6"
+          className="mb-8 sm:mb-10"
         >
-          {/* Nom de l'Usine - Dynamic */}
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight px-2"
-          >
-            {content?.companyName ? (
-              <>
-                {content.companyName.split(' ')[0]}
-                <span className="text-[#C9A14A]"> {content.companyName.split(' ').slice(1).join(' ')}</span>
-              </>
-            ) : (
-              <>
-                ÉBENOR<span className="text-[#C9A14A]"> CRÉATION</span>
-              </>
-            )}
-          </motion.h2>
-          
-          {/* Ligne décorative */}
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "100px" }}
-            transition={{ delay: 0.7, duration: 0.8 }}
-            className="h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-4 sm:mb-6"
-          />
+          {/* Logo Circle */}
+          <div className="inline-flex items-center justify-center w-32 h-32 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full border-2 border-[#C9A14A] p-2 mx-auto mb-8">
+            <Image
+              src="/logo/logo.jpg"
+              alt="ÉBÉNOR CRÉATION Logo"
+              width={160}
+              height={160}
+              className="w-full h-full rounded-full object-cover"
+              priority
+            />
+          </div>
         </motion.div>
 
-        {/* Texte Principal - Taille Réduite */}
+        {/* Company Name - White + Gold */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.8 }}
+          className="mb-6 sm:mb-8"
+        >
+          <h2 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight px-2">
+            <span className="text-white">ÉBÉNOR</span>{' '}
+            <span className="text-[#C9A14A]">CRÉATION</span>
+          </h2>
+        </motion.div>
+
+        {/* Main Title */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -267,11 +266,11 @@ export function HeroVideo() {
           }}
           className="mb-6 sm:mb-8 px-2"
         >
-          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-light leading-tight tracking-wide mb-3 sm:mb-4">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-light leading-tight tracking-wide mb-3 sm:mb-4 text-white">
             {content?.title || "L'élégance du bois, l'empreinte de l'art"}
           </h1>
           <p className="text-sm sm:text-base md:text-lg text-gray-200 max-w-2xl mx-auto leading-relaxed px-4">
-            {content?.subtitle || "Découvrez l'excellence de l'ébénisterie tunisienne"}
+            {content?.subtitle || "Découvrez l'excellence de l'ébénisterie tunisienne avec ÉBÉNOR CRÉATION. Nous transformons vos espaces en œuvres d'art avec passion et savoir-faire depuis plus de 25 ans."}
           </p>
         </motion.div>
 
