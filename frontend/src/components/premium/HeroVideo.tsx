@@ -197,7 +197,7 @@ export function HeroVideo() {
       {/* Content Container */}
       <motion.div
         style={{ y }}
-        className="relative z-10 text-center text-white max-w-4xl mx-auto px-4"
+        className="relative z-10 text-center text-white max-w-4xl mx-auto px-4 sm:px-6"
       >
         {/* Logo Premium et Nom de l'Usine */}
         <motion.div
@@ -208,14 +208,14 @@ export function HeroVideo() {
             delay: 0.2,
             ease: "easeOut"
           }}
-          className="mb-2"
+          className="mb-4 sm:mb-6"
         >
           {/* Nom de l'Usine - Dynamic */}
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.8 }}
-            className="text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-2 tracking-tight"
+            className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 sm:mb-4 tracking-tight px-2"
           >
             {content?.companyName ? (
               <>
@@ -234,7 +234,7 @@ export function HeroVideo() {
             initial={{ width: 0 }}
             animate={{ width: "100px" }}
             transition={{ delay: 0.7, duration: 0.8 }}
-            className="h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto"
+            className="h-0.5 bg-gradient-to-r from-transparent via-amber-500 to-transparent mx-auto mb-4 sm:mb-6"
           />
         </motion.div>
 
@@ -247,12 +247,12 @@ export function HeroVideo() {
             delay: 0.9,
             ease: "easeOut"
           }}
-          className="mb-2"
+          className="mb-6 sm:mb-8 px-2"
         >
-          <h1 className="text-2xl md:text-4xl lg:text-5xl font-serif font-light leading-tight tracking-wide mb-2">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-serif font-light leading-tight tracking-wide mb-3 sm:mb-4">
             {content?.title || "L'élégance du bois, l'empreinte de l'art"}
           </h1>
-          <p className="text-base md:text-lg text-gray-200 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-sm sm:text-base md:text-lg text-gray-200 max-w-2xl mx-auto leading-relaxed px-4">
             {content?.subtitle || "Découvrez l'excellence de l'ébénisterie tunisienne"}
           </p>
         </motion.div>
@@ -266,7 +266,7 @@ export function HeroVideo() {
             delay: 1.2,
             ease: "easeOut"
           }}
-          className="mb-2"
+          className="mb-6 sm:mb-8"
         >
           <motion.button
             whileHover={{ 
@@ -276,7 +276,7 @@ export function HeroVideo() {
             }}
             whileTap={{ scale: 0.95 }}
             transition={{ duration: 0.3 }}
-            className="group relative px-12 py-2 border-2 border-[#C9A14A] text-white font-semibold text-lg rounded-full overflow-hidden backdrop-blur-sm"
+            className="group relative px-8 sm:px-10 md:px-12 py-2.5 sm:py-3 md:py-3.5 border-2 border-[#C9A14A] text-white font-semibold text-base sm:text-lg rounded-full overflow-hidden backdrop-blur-sm"
           >
             {/* Background Gradient on Hover */}
             <motion.div
@@ -303,7 +303,7 @@ export function HeroVideo() {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 2, duration: 0.8 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer z-10"
+        className="absolute bottom-4 sm:bottom-8 left-1/2 transform -translate-x-1/2 cursor-pointer z-10"
         onClick={scrollToNext}
       >
         <motion.div
@@ -315,7 +315,7 @@ export function HeroVideo() {
           }}
           className="flex flex-col items-center text-white/80 hover:text-white transition-colors group"
         >
-          <span className="text-sm mb-2 font-light tracking-[0.2em] uppercase opacity-80 group-hover:opacity-100 transition-opacity">
+          <span className="text-xs sm:text-sm mb-2 font-light tracking-[0.2em] uppercase opacity-80 group-hover:opacity-100 transition-opacity">
             Découvrir
           </span>
           
@@ -330,30 +330,30 @@ export function HeroVideo() {
                 ]
               }}
               transition={{ duration: 2, repeat: Infinity }}
-              className="w-10 h-10 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-sm"
+              className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/30 flex items-center justify-center backdrop-blur-sm"
             >
-              <HiArrowDown className="w-5 h-5" />
+              <HiArrowDown className="w-4 h-4 sm:w-5 sm:h-5" />
             </motion.div>
           </div>
         </motion.div>
       </motion.div>
 
-      {/* Decorative Elements */}
+      {/* Decorative Elements - Hide on mobile */}
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 0.1, scale: 1 }}
         transition={{ delay: 2.5, duration: 1.5 }}
-        className="absolute top-1/4 right-10 w-32 h-32 border border-[#C9A14A]/30 rounded-full"
+        className="hidden md:block absolute top-1/4 right-10 w-32 h-32 border border-[#C9A14A]/30 rounded-full"
       />
       
       <motion.div
         initial={{ opacity: 0, scale: 0 }}
         animate={{ opacity: 0.1, scale: 1 }}
         transition={{ delay: 3, duration: 1.5 }}
-        className="absolute bottom-1/4 left-10 w-24 h-24 border border-white/20 rounded-full"
+        className="hidden md:block absolute bottom-1/4 left-10 w-24 h-24 border border-white/20 rounded-full"
       />
 
-      {/* Particles Effect */}
+      {/* Particles Effect - Reduce on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {[
           { left: '15%', top: '20%', duration: 4.5, delay: 0 },
@@ -362,7 +362,7 @@ export function HeroVideo() {
           { left: '70%', top: '75%', duration: 5.5, delay: 0.2 },
           { left: '85%', top: '45%', duration: 4.2, delay: 1.0 },
           { left: '25%', top: '85%', duration: 5.0, delay: 0.6 },
-        ].map((p, i) => (
+        ].slice(0, window.innerWidth < 768 ? 3 : 6).map((p, i) => (
           <motion.div
             key={i}
             className="absolute w-1 h-1 bg-[#C9A14A] rounded-full"
