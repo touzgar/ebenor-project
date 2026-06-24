@@ -202,8 +202,15 @@ export default function AccueilAdminPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
   const [mounted, setMounted] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [isUploading, setIsUploading] = useState(false);
+  
+  // Separate upload states for each video section
+  const [uploadStates, setUploadStates] = useState({
+    hero: { isUploading: false, progress: 0 },
+    factoryVideo1: { isUploading: false, progress: 0 },
+    factoryVideo2: { isUploading: false, progress: 0 },
+    woodCatalog: { isUploading: false, progress: 0 },
+    ctaBackground: { isUploading: false, progress: 0 },
+  });
   
   // Footer content state
   const [footerContent, setFooterContent] = useState<any>({
@@ -281,7 +288,7 @@ export default function AccueilAdminPage() {
   };
 
   // Helper function for video uploads with progress
-  const uploadVideo = async (file: File): Promise<string> => {
+  const uploadVideo = async (file: File, section: keyof typeof uploadStates): Promise<string> => {
     return new Promise((resolve, reject) => {
       const formData = new FormData();
       formData.append('file', file);
@@ -290,17 +297,23 @@ export default function AccueilAdminPage() {
       
       const xhr = new XMLHttpRequest();
       
-      // Track upload progress
+      // Track upload progress for specific section
       xhr.upload.addEventListener('progress', (e) => {
         if (e.lengthComputable) {
           const percentComplete = Math.round((e.loaded / e.total) * 100);
-          setUploadProgress(percentComplete);
-          console.log(`📊 Upload progress: ${percentComplete}%`);
+          setUploadStates(prev => ({
+            ...prev,
+            [section]: { isUploading: true, progress: percentComplete }
+          }));
+          console.log(`📊 Upload progress (${section}): ${percentComplete}%`);
         }
       });
       
       xhr.addEventListener('load', () => {
-        setUploadProgress(0);
+        setUploadStates(prev => ({
+          ...prev,
+          [section]: { isUploading: false, progress: 0 }
+        }));
         if (xhr.status >= 200 && xhr.status < 300) {
           try {
             const data = JSON.parse(xhr.responseText);
@@ -317,7 +330,10 @@ export default function AccueilAdminPage() {
       });
       
       xhr.addEventListener('error', () => {
-        setUploadProgress(0);
+        setUploadStates(prev => ({
+          ...prev,
+          [section]: { isUploading: false, progress: 0 }
+        }));
         reject(new Error('Network error during upload'));
       });
       
@@ -796,16 +812,19 @@ export default function AccueilAdminPage() {
                       <input
                         type="file"
                         accept="video/mp4,video/webm"
-                        disabled={isUploading}
+                        disabled={uploadStates.hero.isUploading}
                         onChange={async (e) => {
                           const file = e.target.files?.[0];
                           if (file) {
                             try {
-                              setIsUploading(true);
+                              setUploadStates(prev => ({
+                                ...prev,
+                                hero: { isUploading: true, progress: 0 }
+                              }));
                               toast.info('⏳ Upload en cours...');
                               console.log('📤 Uploading video:', file.name, `(${(file.size / (1024 * 1024)).toFixed(2)} MB)`);
                               
-                              const url = await uploadVideo(file);
+                              const url = await uploadVideo(file, 'hero');
                               console.log('✅ Video uploaded successfully! URL:', url);
                               
                               // Update state with new URL
@@ -830,22 +849,19 @@ export default function AccueilAdminPage() {
                             } catch (error: any) {
                               console.error('❌ Video upload error:', error);
                               toast.error(error.message || '❌ Erreur lors de l\'upload');
-                            } finally {
-                              setIsUploading(false);
-                              setUploadProgress(0);
                             }
                           }
                         }}
                         className="block w-full text-sm text-neutral-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       />
-                      {isUploading && uploadProgress > 0 && (
+                      {uploadStates.hero.isUploading && uploadStates.hero.progress > 0 && (
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
                           <div 
                             className="bg-amber-600 h-2.5 rounded-full transition-all duration-300" 
-                            style={{ width: `${uploadProgress}%` }}
+                            style={{ width: `${uploadStates.hero.progress}%` }}
                           />
                           <p className="text-xs text-amber-600 font-medium mt-1">
-                            Upload en cours: {uploadProgress}%
+                            Upload en cours: {uploadStates.hero.progress}%
                           </p>
                         </div>
                       )}
@@ -1000,15 +1016,18 @@ export default function AccueilAdminPage() {
                     <input
                       type="file"
                       accept="video/mp4,video/webm"
-                      disabled={isUploading}
+                      disabled={uploadStates.factoryVideo1.isUploading}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           try {
-                            setIsUploading(true);
+                            setUploadStates(prev => ({
+                              ...prev,
+                              factoryVideo1: { isUploading: true, progress: 0 }
+                            }));
                             toast.info('⏳ Upload vidéo 1...');
                             
-                            const url = await uploadVideo(file);
+                            const url = await uploadVideo(file, 'factoryVideo1');
                             
                             const newContent = {
                               ...content,
@@ -1022,20 +1041,17 @@ export default function AccueilAdminPage() {
                           } catch (error: any) {
                             console.error('Video upload error:', error);
                             toast.error(error.message || '❌ Erreur');
-                          } finally {
-                            setIsUploading(false);
-                            setUploadProgress(0);
                           }
                         }
                       }}
                       className="block w-full text-sm text-neutral-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer mb-3 disabled:opacity-50"
                     />
-                    {isUploading && uploadProgress > 0 && (
+                    {uploadStates.factoryVideo1.isUploading && uploadStates.factoryVideo1.progress > 0 && (
                       <div className="mb-3">
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }} />
+                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadStates.factoryVideo1.progress}%` }} />
                         </div>
-                        <p className="text-xs text-amber-600 mt-1">{uploadProgress}%</p>
+                        <p className="text-xs text-amber-600 mt-1">{uploadStates.factoryVideo1.progress}%</p>
                       </div>
                     )}
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -1104,15 +1120,18 @@ export default function AccueilAdminPage() {
                     <input
                       type="file"
                       accept="video/mp4,video/webm"
-                      disabled={isUploading}
+                      disabled={uploadStates.factoryVideo2.isUploading}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           try {
-                            setIsUploading(true);
+                            setUploadStates(prev => ({
+                              ...prev,
+                              factoryVideo2: { isUploading: true, progress: 0 }
+                            }));
                             toast.info('⏳ Upload vidéo 2...');
                             
-                            const url = await uploadVideo(file);
+                            const url = await uploadVideo(file, 'factoryVideo2');
                             
                             const newContent = {
                               ...content,
@@ -1126,20 +1145,17 @@ export default function AccueilAdminPage() {
                           } catch (error: any) {
                             console.error('Video upload error:', error);
                             toast.error(error.message || '❌ Erreur');
-                          } finally {
-                            setIsUploading(false);
-                            setUploadProgress(0);
                           }
                         }
                       }}
                       className="block w-full text-sm text-neutral-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer mb-3 disabled:opacity-50"
                     />
-                    {isUploading && uploadProgress > 0 && (
+                    {uploadStates.factoryVideo2.isUploading && uploadStates.factoryVideo2.progress > 0 && (
                       <div className="mb-3">
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }} />
+                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadStates.factoryVideo2.progress}%` }} />
                         </div>
-                        <p className="text-xs text-amber-600 mt-1">{uploadProgress}%</p>
+                        <p className="text-xs text-amber-600 mt-1">{uploadStates.factoryVideo2.progress}%</p>
                       </div>
                     )}
                     <label className="block text-sm font-medium text-neutral-700 mb-2">
@@ -1322,15 +1338,18 @@ export default function AccueilAdminPage() {
                     <input
                       type="file"
                       accept="video/mp4,video/webm"
-                      disabled={isUploading}
+                      disabled={uploadStates.woodCatalog.isUploading}
                       onChange={async (e) => {
                         const file = e.target.files?.[0];
                         if (file) {
                           try {
-                            setIsUploading(true);
+                            setUploadStates(prev => ({
+                              ...prev,
+                              woodCatalog: { isUploading: true, progress: 0 }
+                            }));
                             toast.info('⏳ Upload vidéo catalogue...');
                             
-                            const url = await uploadVideo(file);
+                            const url = await uploadVideo(file, 'woodCatalog');
                             
                             const newContent = {
                               ...content,
@@ -1344,20 +1363,17 @@ export default function AccueilAdminPage() {
                           } catch (error: any) {
                             console.error('Video upload error:', error);
                             toast.error(error.message || '❌ Erreur');
-                          } finally {
-                            setIsUploading(false);
-                            setUploadProgress(0);
                           }
                         }
                       }}
                       className="block w-full text-sm text-neutral-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-amber-600 file:text-white hover:file:bg-amber-700 cursor-pointer disabled:opacity-50"
                     />
-                    {isUploading && uploadProgress > 0 && (
+                    {uploadStates.woodCatalog.isUploading && uploadStates.woodCatalog.progress > 0 && (
                       <div className="mt-3">
                         <div className="w-full bg-gray-200 rounded-full h-2.5">
-                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadProgress}%` }} />
+                          <div className="bg-amber-600 h-2.5 rounded-full" style={{ width: `${uploadStates.woodCatalog.progress}%` }} />
                         </div>
-                        <p className="text-xs text-amber-600 mt-1">{uploadProgress}%</p>
+                        <p className="text-xs text-amber-600 mt-1">{uploadStates.woodCatalog.progress}%</p>
                       </div>
                     )}
                     <label className="block text-sm font-medium text-neutral-700 mb-2 mt-3">
