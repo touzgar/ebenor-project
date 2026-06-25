@@ -42,25 +42,7 @@ export default function ProductDetailPage() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [showVideoLightbox, setShowVideoLightbox] = useState(false);
   const [showImageLightbox, setShowImageLightbox] = useState(false);
-  const [isVideoHovered, setIsVideoHovered] = useState(false);
   const mainVideoRef = React.useRef<HTMLVideoElement>(null);
-
-  // Auto-play video on hover - MUST be before any early returns
-  React.useEffect(() => {
-    if (mainVideoRef.current && product?.video?.url) {
-      if (isVideoHovered) {
-        const playPromise = mainVideoRef.current.play();
-        if (playPromise !== undefined) {
-          playPromise.catch((error) => {
-            console.log('Video play prevented:', error);
-          });
-        }
-      } else {
-        mainVideoRef.current.pause();
-        mainVideoRef.current.currentTime = 0;
-      }
-    }
-  }, [isVideoHovered, product]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -174,59 +156,23 @@ export default function ProductDetailPage() {
                   style={{ height: '700px' }}
                 >
                   {hasVideo && selectedImageIndex === 0 ? (
-                    <div 
-                      className="relative w-full h-full bg-neutral-900"
-                      onMouseEnter={() => setIsVideoHovered(true)}
-                      onMouseLeave={() => setIsVideoHovered(false)}
-                    >
+                    <div className="relative w-full h-full bg-neutral-900">
                       <video
                         ref={mainVideoRef}
                         src={product.video?.url || ''}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer"
                         loop
                         muted
                         playsInline
                         preload="metadata"
+                        controls
                         onClick={() => setShowVideoLightbox(true)}
-                        style={{ cursor: 'pointer' }}
                       />
                       
-                      {/* Play Button Overlay */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        {!isVideoHovered && (
-                          <motion.div 
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="p-8 bg-white/95 rounded-full shadow-2xl pointer-events-auto cursor-pointer"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setShowVideoLightbox(true);
-                            }}
-                          >
-                            <PlayIcon className="w-16 h-16 text-amber-600" />
-                          </motion.div>
-                        )}
-                      </div>
-
-                      {/* Playing Indicator */}
-                      {isVideoHovered && (
-                        <motion.div 
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="absolute top-6 left-6 px-4 py-2 bg-green-500 rounded-full shadow-xl pointer-events-none"
-                        >
-                          <span className="text-white text-sm font-bold">▶ En lecture...</span>
-                        </motion.div>
-                      )}
-
                       {/* Click to Expand Hint */}
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-black/70 backdrop-blur-sm rounded-full pointer-events-none"
-                      >
+                      <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 px-4 py-2 bg-black/70 backdrop-blur-sm rounded-full pointer-events-none opacity-80 hover:opacity-100 transition-opacity">
                         <span className="text-white text-sm font-semibold">Cliquez pour agrandir</span>
-                      </motion.div>
+                      </div>
                     </div>
                   ) : (
                     <div 
