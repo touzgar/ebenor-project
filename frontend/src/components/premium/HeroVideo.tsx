@@ -62,50 +62,45 @@ export function HeroVideo() {
   useEffect(() => {
     setMounted(true);
     
-    const loadContent = () => {
+    const loadContent = async () => {
       try {
-        // First try localStorage (admin updates)
+        // First try API (database)
+        const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
+        const timestamp = new Date().getTime();
+        const response = await fetch(`${API_BASE_URL}/home?t=${timestamp}`, {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.data?.hero) {
+            console.log('🎬 HeroVideo: Loading from API:', data.data.hero.videoUrl);
+            setContent(data.data.hero);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching hero content from API:', error);
+      }
+      
+      // Fallback to localStorage if database fails
+      try {
         const saved = localStorage.getItem('homepage_content');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (parsed.hero) {
             console.log('🎬 HeroVideo: Loading from localStorage:', parsed.hero.videoUrl);
             setContent(parsed.hero);
-            setLoading(false);
-            return;
           }
         }
-        
-        // Fallback to API
-        const fetchFromAPI = async () => {
-          try {
-            const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
-            const timestamp = new Date().getTime();
-            const response = await fetch(`${API_BASE_URL}/home?t=${timestamp}`, {
-              headers: {
-                'Cache-Control': 'no-cache, no-store, must-revalidate',
-              }
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              if (data.data?.hero) {
-                console.log('🎬 HeroVideo: Loading from API:', data.data.hero.videoUrl);
-                setContent(data.data.hero);
-              }
-            }
-          } catch (error) {
-            console.error('Error fetching hero content:', error);
-          } finally {
-            setLoading(false);
-          }
-        };
-        
-        fetchFromAPI();
       } catch (error) {
-        console.error('Error loading hero content:', error);
-        setLoading(false);
+        console.error('Error loading hero content from localStorage:', error);
       }
+      
+      setLoading(false);
     };
 
     loadContent();

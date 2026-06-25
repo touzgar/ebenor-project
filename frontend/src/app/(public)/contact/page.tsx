@@ -119,6 +119,7 @@ const defaultContent: ContactPageContent = {
  */
 export default function ContactPage() {
   const [pageContent, setPageContent] = useState<ContactPageContent>(defaultContent);
+  const [isLoading, setIsLoading] = useState(true);
   
   const [formData, setFormData] = useState({
     firstName: '',
@@ -146,6 +147,7 @@ export default function ContactPage() {
           const result = await response.json();
           if (result.success && result.data) {
             setPageContent(result.data);
+            setIsLoading(false);
             return; // Successfully loaded from database
           }
         }
@@ -162,6 +164,8 @@ export default function ContactPage() {
           console.error('Error loading contact page content:', error);
         }
       }
+      
+      setIsLoading(false);
     };
     
     loadContent();
@@ -281,6 +285,17 @@ export default function ContactPage() {
       setIsSubmitting(false);
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+          <p className="mt-4 text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
