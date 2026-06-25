@@ -20,7 +20,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/useAuth';
 import { toast } from '@/lib/toast';
 import {
   CheckCircleIcon,
@@ -158,21 +157,28 @@ const defaultContent: FooterContent = {
 
 function FooterEditorPage() {
   const router = useRouter();
-  const { isAuthenticated, isLoading } = useAuth();
   const [content, setContent] = useState<FooterContent>(defaultContent);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('brand');
   const [mounted, setMounted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
+  // Check auth on mount
   useEffect(() => {
+    const checkAuth = () => {
+      const token = localStorage.getItem('auth_token');
+      setIsAuthenticated(!!token);
+      setIsLoading(false);
+      
+      if (!token) {
+        router.push('/admin/login');
+      }
+    };
+    
+    checkAuth();
     setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push('/admin/login');
-    }
-  }, [isAuthenticated, isLoading, router]);
+  }, [router]);
 
   useEffect(() => {
     if (!mounted) return;
