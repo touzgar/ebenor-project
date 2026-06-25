@@ -136,16 +136,35 @@ export default function ContactPage() {
     message: string;
   }>({ type: null, message: '' });
 
-  // Load content from localStorage
+  // Load content from database first, then localStorage as fallback
   useEffect(() => {
-    const saved = localStorage.getItem('contact_page_content');
-    if (saved) {
+    const loadContent = async () => {
       try {
-        setPageContent(JSON.parse(saved));
+        // Try to load from database first
+        const response = await fetch('/api/contact');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setPageContent(result.data);
+            return; // Successfully loaded from database
+          }
+        }
       } catch (error) {
-        console.error('Error loading contact page content:', error);
+        console.error('Error loading from database:', error);
       }
-    }
+      
+      // Fallback to localStorage if database fails
+      const saved = localStorage.getItem('contact_page_content');
+      if (saved) {
+        try {
+          setPageContent(JSON.parse(saved));
+        } catch (error) {
+          console.error('Error loading contact page content:', error);
+        }
+      }
+    };
+    
+    loadContent();
   }, []);
 
   // Listen for storage changes (when admin saves in another tab/window)
