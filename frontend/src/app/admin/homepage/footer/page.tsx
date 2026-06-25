@@ -242,14 +242,6 @@ function FooterEditorPage() {
       setIsSaving(false);
     }
   };
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success('✅ Footer mis à jour sur toutes les pages!');
-    } catch (error) {
-      toast.error('❌ Erreur lors de la sauvegarde');
-    } finally {
-      setIsSaving(false);
-    }
-  };
 
   const handleReset = () => {
     if (confirm('Êtes-vous sûr de vouloir réinitialiser tout le contenu du footer?')) {
