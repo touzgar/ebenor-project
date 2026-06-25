@@ -354,30 +354,69 @@ export default function AccueilAdminPage() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = localStorage.getItem('homepage_content');
-    if (saved) {
+    
+    // Load from database first
+    const loadFromDatabase = async () => {
       try {
-        const parsed = JSON.parse(saved);
-        // Ensure woodCatalog has woodSamples array
-        if (parsed.woodCatalog && !parsed.woodCatalog.woodSamples) {
-          parsed.woodCatalog.woodSamples = defaultContent.woodCatalog.woodSamples;
+        const response = await fetch('/api/home');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            // Ensure woodCatalog has woodSamples array
+            if (result.data.woodCatalog && !result.data.woodCatalog.woodSamples) {
+              result.data.woodCatalog.woodSamples = defaultContent.woodCatalog.woodSamples;
+            }
+            // Ensure cta has stats array
+            if (result.data.cta && !result.data.cta.stats) {
+              result.data.cta.stats = defaultContent.cta.stats;
+            }
+            // Merge with defaults to ensure all fields exist
+            setContent({
+              ...defaultContent,
+              ...result.data,
+              cta: {
+                ...defaultContent.cta,
+                ...result.data.cta,
+                stats: result.data.cta?.stats || defaultContent.cta.stats
+              },
+              woodCatalog: {
+                ...defaultContent.woodCatalog,
+                ...result.data.woodCatalog,
+                woodSamples: result.data.woodCatalog?.woodSamples || defaultContent.woodCatalog.woodSamples
+              }
+            });
+            return; // Successfully loaded from database
+          }
         }
-        // Ensure cta has stats array
-        if (parsed.cta && !parsed.cta.stats) {
-          parsed.cta.stats = defaultContent.cta.stats;
-        }
-        // Merge with defaults to ensure all fields exist
-        setContent({
-          ...defaultContent,
-          ...parsed,
-          cta: {
-            ...defaultContent.cta,
-            ...parsed.cta,
-            stats: parsed.cta?.stats || defaultContent.cta.stats
-          },
-          woodCatalog: {
-            ...defaultContent.woodCatalog,
-            ...parsed.woodCatalog,
+      } catch (error) {
+        console.error('Error loading from database:', error);
+      }
+      
+      // Fallback to localStorage if database fails
+      const saved = localStorage.getItem('homepage_content');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          // Ensure woodCatalog has woodSamples array
+          if (parsed.woodCatalog && !parsed.woodCatalog.woodSamples) {
+            parsed.woodCatalog.woodSamples = defaultContent.woodCatalog.woodSamples;
+          }
+          // Ensure cta has stats array
+          if (parsed.cta && !parsed.cta.stats) {
+            parsed.cta.stats = defaultContent.cta.stats;
+          }
+          // Merge with defaults to ensure all fields exist
+          setContent({
+            ...defaultContent,
+            ...parsed,
+            cta: {
+              ...defaultContent.cta,
+              ...parsed.cta,
+              stats: parsed.cta?.stats || defaultContent.cta.stats
+            },
+            woodCatalog: {
+              ...defaultContent.woodCatalog,
+              ...parsed.woodCatalog,
             woodSamples: parsed.woodCatalog?.woodSamples || defaultContent.woodCatalog.woodSamples
           }
         });
@@ -386,6 +425,9 @@ export default function AccueilAdminPage() {
         // Use default content on error
       }
     }
+    };
+    
+    loadFromDatabase();
     
     // Load footer content
     const savedFooter = localStorage.getItem('footer_content');
