@@ -162,6 +162,11 @@ function FooterEditorPage() {
   const [content, setContent] = useState<FooterContent>(defaultContent);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('brand');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -170,15 +175,17 @@ function FooterEditorPage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
+    if (!mounted) return;
+    
     const saved = localStorage.getItem('footer_content');
     if (saved) {
       try {
         setContent(JSON.parse(saved));
       } catch (error) {
-        // Use default content
+        console.error('Error loading footer content:', error);
       }
     }
-  }, []);
+  }, [mounted]);
 
   const handleSave = async () => {
     setIsSaving(true);
