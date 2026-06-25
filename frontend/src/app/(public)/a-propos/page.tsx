@@ -113,6 +113,7 @@ const iconMap: Record<string, any> = {
 export default function AboutPage() {
   const [content, setContent] = useState<AboutPageContent>(defaultContent);
   const [mounted, setMounted] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -150,6 +151,7 @@ export default function AboutPage() {
             }
             
             setContent(data);
+            setIsLoading(false);
             return;
           }
         }
@@ -166,6 +168,8 @@ export default function AboutPage() {
           console.error('Error loading about page content:', error);
         }
       }
+      
+      setIsLoading(false);
     };
     
     loadFromDatabase();
@@ -204,8 +208,15 @@ export default function AboutPage() {
     return () => window.removeEventListener('about_page_updated', handleCustomUpdate);
   }, []);
 
-  if (!mounted) {
-    return null; // Prevent SSR mismatch
+  if (!mounted || isLoading) {
+    return (
+      <div className="min-h-screen bg-neutral-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 mx-auto"></div>
+          <p className="mt-4 text-neutral-600">Chargement...</p>
+        </div>
+      </div>
+    ); // Prevent SSR mismatch and flash of default content
   }
 
   // Map stats with icons

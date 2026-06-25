@@ -22,6 +22,7 @@ import {
 function GaleriePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [isLoading, setIsLoading] = useState(true);
   
   // Load custom content from localStorage
   const [pageContent, setPageContent] = useState({
@@ -48,6 +49,7 @@ function GaleriePageContent() {
           const result = await response.json();
           if (result.success && result.data) {
             setPageContent(result.data);
+            setIsLoading(false);
             return;
           }
         }
@@ -65,6 +67,8 @@ function GaleriePageContent() {
           // Use default content
         }
       }
+      
+      setIsLoading(false);
     };
 
     loadContent();
@@ -270,8 +274,8 @@ function GaleriePageContent() {
 
   const hasActiveFilters = filters.category;
 
-  // Show loading state during SSR/mounting
-  if (!mounted) {
+  // Show loading state during SSR/mounting or data loading
+  if (!mounted || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <div className="text-center">
