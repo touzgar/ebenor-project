@@ -210,6 +210,7 @@ export default function AccueilAdminPage() {
     factoryVideo2: { isUploading: false, progress: 0 },
     woodCatalog: { isUploading: false, progress: 0 },
     ctaBackground: { isUploading: false, progress: 0 },
+    footerBackground: { isUploading: false, progress: 0 },
   });
   
   // Footer content state
@@ -2293,7 +2294,10 @@ export default function AccueilAdminPage() {
                       const file = e.target.files?.[0];
                       if (file) {
                         try {
-                          setIsUploading(true);
+                          setUploadStates(prev => ({
+                            ...prev,
+                            footerBackground: { isUploading: true, progress: 0 }
+                          }));
                           toast.success('📤 Upload de l\'image en cours...');
                           const url = await uploadImage(file);
                           setFooterContent({ ...footerContent, backgroundImage: url });
@@ -2310,14 +2314,17 @@ export default function AccueilAdminPage() {
                           console.error('Upload error:', error);
                           toast.error('❌ Erreur lors de l\'upload');
                         } finally {
-                          setIsUploading(false);
+                          setUploadStates(prev => ({
+                            ...prev,
+                            footerBackground: { isUploading: false, progress: 0 }
+                          }));
                         }
                       }
                     }}
                     className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100"
-                    disabled={isUploading}
+                    disabled={uploadStates.footerBackground.isUploading}
                   />
-                  {isUploading && (
+                  {uploadStates.footerBackground.isUploading && (
                     <div className="flex items-center gap-2 text-amber-600">
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-amber-600"></div>
                       <span className="text-sm">Upload en cours...</span>
