@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { HiMenu, HiX } from 'react-icons/hi';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navigation = [
   { name: 'Accueil', href: '/' },
@@ -19,6 +20,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -171,24 +173,56 @@ export function Header() {
               transition={{ delay: 0.8, duration: 0.6 }}
               className="hidden md:flex items-center space-x-2 lg:space-x-4 flex-shrink-0"
             >
-              <Link
-                href="/admin/login"
-                className="group relative px-3 lg:px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-white/30 hover:border-[#C9A14A] hover:text-[#C9A14A] transition-all duration-300 transform hover:scale-105 focus-visible-enhanced backdrop-blur-sm bg-white/5 hover:bg-[#C9A14A]/10 shadow-lg hover:shadow-[#C9A14A]/30"
-                aria-label="Connexion administrateur"
-              >
-                <span className="relative z-10 tracking-wide flex items-center space-x-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
-                  </svg>
-                  <span>Admin</span>
-                </span>
-                
-                {/* Effet glow au hover */}
-                <motion.div
-                  className="absolute inset-0 rounded-full bg-[#C9A14A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"
-                  initial={false}
-                />
-              </Link>
+              {/* Show loading state while checking auth to prevent flash */}
+              {isLoading ? (
+                <div className="group relative px-3 lg:px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-white/20 bg-white/5 backdrop-blur-sm shadow-lg opacity-50">
+                  <span className="relative z-10 tracking-wide flex items-center space-x-2">
+                    <svg className="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>...</span>
+                  </span>
+                </div>
+              ) : isAuthenticated ? (
+                <Link
+                  href="/admin/dashboard"
+                  className="group relative px-3 lg:px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-[#C9A14A] bg-[#C9A14A]/20 hover:bg-[#C9A14A] hover:text-black transition-all duration-300 transform hover:scale-105 focus-visible-enhanced backdrop-blur-sm shadow-lg shadow-[#C9A14A]/30"
+                  aria-label="Accéder à l'espace administrateur"
+                >
+                  <span className="relative z-10 tracking-wide flex items-center space-x-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Mon Espace</span>
+                  </span>
+                  
+                  {/* Effet glow au hover */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-[#C9A14A]/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"
+                    initial={false}
+                  />
+                </Link>
+              ) : (
+                <Link
+                  href="/admin/login"
+                  className="group relative px-3 lg:px-4 xl:px-6 py-2 xl:py-2.5 text-white font-semibold text-xs xl:text-sm rounded-full border-2 border-white/30 hover:border-[#C9A14A] hover:text-[#C9A14A] transition-all duration-300 transform hover:scale-105 focus-visible-enhanced backdrop-blur-sm bg-white/5 hover:bg-[#C9A14A]/10 shadow-lg hover:shadow-[#C9A14A]/30"
+                  aria-label="Connexion administrateur"
+                >
+                  <span className="relative z-10 tracking-wide flex items-center space-x-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Admin</span>
+                  </span>
+                  
+                  {/* Effet glow au hover */}
+                  <motion.div
+                    className="absolute inset-0 rounded-full bg-[#C9A14A]/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md"
+                    initial={false}
+                  />
+                </Link>
+              )}
               
               <Link
                 href="/contact"
@@ -352,14 +386,37 @@ export function Header() {
                 transition={{ delay: 0.8, duration: 0.6 }}
                 className="flex flex-col items-center space-y-3 sm:space-y-4 w-full max-w-xs px-4"
               >
-                <Link
-                  href="/admin/login"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="w-full px-8 sm:px-10 py-2.5 sm:py-3 border-2 border-[#C9A14A] text-[#C9A14A] font-semibold text-sm sm:text-base rounded-full hover:bg-[#C9A14A] hover:text-black transition-all duration-300 focus-visible-enhanced text-center"
-                  aria-label="Connexion administrateur"
-                >
-                  Connexion Admin
-                </Link>
+                {/* Show loading state while checking auth to prevent flash */}
+                {isLoading ? (
+                  <div className="w-full px-8 sm:px-10 py-2.5 sm:py-3 border-2 border-white/20 text-white/50 font-semibold text-sm sm:text-base rounded-full bg-white/5 text-center flex items-center justify-center space-x-2">
+                    <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Chargement...</span>
+                  </div>
+                ) : isAuthenticated ? (
+                  <Link
+                    href="/admin/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full px-8 sm:px-10 py-2.5 sm:py-3 border-2 border-[#C9A14A] bg-[#C9A14A]/20 text-[#C9A14A] font-semibold text-sm sm:text-base rounded-full hover:bg-[#C9A14A] hover:text-black transition-all duration-300 focus-visible-enhanced text-center flex items-center justify-center space-x-2"
+                    aria-label="Accéder à l'espace administrateur"
+                  >
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Mon Espace</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/admin/login"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="w-full px-8 sm:px-10 py-2.5 sm:py-3 border-2 border-[#C9A14A] text-[#C9A14A] font-semibold text-sm sm:text-base rounded-full hover:bg-[#C9A14A] hover:text-black transition-all duration-300 focus-visible-enhanced text-center"
+                    aria-label="Connexion administrateur"
+                  >
+                    Connexion Admin
+                  </Link>
+                )}
                 
                 <Link
                   href="/contact"
