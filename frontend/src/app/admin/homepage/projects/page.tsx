@@ -53,44 +53,60 @@ function ProjectsEditorPage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('projects_page_content');
-    if (saved) {
+    // Load from database
+    const loadFromDatabase = async () => {
       try {
-        setContent(JSON.parse(saved));
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/admin/projects', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setContent(result.data);
+          }
+        }
       } catch (error) {
-        // Error loading saved content
+        console.error('Error loading projects content:', error);
+        // Fallback to localStorage
+        const saved = localStorage.getItem('projects_page_content');
+        if (saved) {
+          try {
+            setContent(JSON.parse(saved));
+          } catch (e) {}
+        }
       }
-    }
+    };
+    
+    loadFromDatabase();
   }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('projects_page_content', JSON.stringify(content));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/admin/projects', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(content),
+      });
       
-      // Method 1: Dispatch custom event for same tab
-      window.dispatchEvent(new Event('projects_page_updated'));
+      const result = await response.json();
       
-      // Method 2: BroadcastChannel for cross-tab communication
-      try {
-        const channel = new BroadcastChannel('projects_page_updates');
-        channel.postMessage({ type: 'update', data: content });
-        channel.close();
-      } catch (e) {
-        // BroadcastChannel not supported, fallback to storage event
+      if (response.ok && result.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem('projects_page_content', JSON.stringify(content));
+        window.dispatchEvent(new Event('projects_page_updated'));
+        toast.success('✅ Page Nos Projets mise à jour avec succès!');
+      } else {
+        toast.error('❌ Erreur: ' + (result.message || 'Erreur serveur'));
       }
-      
-      // Method 3: Trigger storage event manually
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'projects_page_content',
-        newValue: JSON.stringify(content),
-        url: window.location.href,
-        storageArea: localStorage
-      }));
-      
-      await new Promise(resolve => setTimeout(resolve, 500));
-      toast.success('✅ Page Nos Projets mise à jour avec succès!');
     } catch (error) {
+      console.error('Save error:', error);
       toast.error('❌ Erreur lors de la sauvegarde');
     } finally {
       setIsSaving(false);

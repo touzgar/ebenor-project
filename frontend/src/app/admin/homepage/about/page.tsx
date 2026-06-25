@@ -118,16 +118,34 @@ export default function AboutAdminPage() {
     }
   }, [isAuthenticated, authLoading, router]);
 
-  // Load saved content
+  // Load saved content from database
   useEffect(() => {
-    const saved = localStorage.getItem('about_page_content');
-    if (saved) {
+    const loadFromDatabase = async () => {
       try {
-        setContent(JSON.parse(saved));
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/admin/about', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setContent(result.data);
+          }
+        }
       } catch (error) {
-        console.error('Error loading content:', error);
+        console.error('Error loading about content:', error);
+        // Fallback to localStorage
+        const saved = localStorage.getItem('about_page_content');
+        if (saved) {
+          try {
+            setContent(JSON.parse(saved));
+          } catch (e) {}
+        }
       }
-    }
+    };
+    
+    loadFromDatabase();
   }, []);
 
   const handleImageUpload = (field: string, subfield?: string) => {
@@ -153,14 +171,32 @@ export default function AboutAdminPage() {
     input.click();
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
     try {
-      localStorage.setItem('about_page_content', JSON.stringify(content));
-      window.dispatchEvent(new Event('about_page_updated'));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/admin/about', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(content),
+      });
       
-      setSaveSuccess(true);
+      const result = await response.json();
+      
+      if (response.ok && result.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem('about_page_content', JSON.stringify(content));
+        window.dispatchEvent(new Event('about_page_updated'));
+        
+        setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
+      } else {
+        console.error('Save error:', result.message);
+        alert('Erreur: ' + (result.message || 'Erreur serveur'));
+      }
     } catch (error) {
       console.error('Save error:', error);
       alert('Erreur lors de la sauvegarde');

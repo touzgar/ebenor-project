@@ -183,41 +183,65 @@ function FooterEditorPage() {
   useEffect(() => {
     if (!mounted) return;
     
-    const saved = localStorage.getItem('footer_content');
-    if (saved) {
+    const loadFromDatabase = async () => {
       try {
-        setContent(JSON.parse(saved));
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/admin/footer', {
+          headers: { 'Authorization': `Bearer ${token}` },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setContent(result.data);
+          }
+        }
       } catch (error) {
         console.error('Error loading footer content:', error);
+        // Fallback to localStorage
+        const saved = localStorage.getItem('footer_content');
+        if (saved) {
+          try {
+            setContent(JSON.parse(saved));
+          } catch (e) {}
+        }
       }
-    }
+    };
+    
+    loadFromDatabase();
   }, [mounted]);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('footer_content', JSON.stringify(content));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/admin/footer', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(content),
+      });
       
-      // Method 1: Dispatch custom event for same tab
-      window.dispatchEvent(new Event('footer_content_updated'));
+      const result = await response.json();
       
-      // Method 2: BroadcastChannel for cross-tab communication
-      try {
-        const channel = new BroadcastChannel('footer_updates');
-        channel.postMessage({ type: 'update', data: content });
-        channel.close();
-      } catch (e) {
-        // BroadcastChannel not supported
+      if (response.ok && result.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem('footer_content', JSON.stringify(content));
+        window.dispatchEvent(new Event('footer_content_updated'));
+        
+        toast.success('✅ Footer mis à jour avec succès!');
+      } else {
+        toast.error('❌ Erreur: ' + (result.message || 'Erreur serveur'));
       }
-      
-      // Method 3: Trigger storage event manually
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'footer_content',
-        newValue: JSON.stringify(content),
-        url: window.location.href,
-        storageArea: localStorage
-      }));
-      
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('❌ Erreur lors de la sauvegarde');
+    } finally {
+      setIsSaving(false);
+    }
+  };
       await new Promise(resolve => setTimeout(resolve, 500));
       toast.success('✅ Footer mis à jour sur toutes les pages!');
     } catch (error) {
