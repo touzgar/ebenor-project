@@ -124,29 +124,68 @@ function ContactEditorPage() {
   }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
-    const saved = localStorage.getItem('contact_page_content');
-    if (saved) {
+    // Load from database instead of localStorage
+    const loadFromDatabase = async () => {
       try {
-        setContent(JSON.parse(saved));
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch('/api/admin/contact', {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          },
+        });
+        
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setContent(result.data);
+          }
+        }
       } catch (error) {
-        console.error('Error loading saved content:', error);
+        console.error('Error loading contact content from database:', error);
+        // Fallback to localStorage if database fails
+        const saved = localStorage.getItem('contact_page_content');
+        if (saved) {
+          try {
+            setContent(JSON.parse(saved));
+          } catch (e) {
+            console.error('Error parsing localStorage:', e);
+          }
+        }
       }
-    }
+    };
+    
+    loadFromDatabase();
   }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
     try {
-      localStorage.setItem('contact_page_content', JSON.stringify(content));
+      const token = localStorage.getItem('auth_token');
+      const response = await fetch('/api/admin/contact', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(content),
+      });
       
-      // Dispatch custom event to notify other tabs/windows
-      window.dispatchEvent(new Event('contact_page_updated'));
+      const result = await response.json();
       
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      toast.success('✅ Page Contact mise à jour avec succès!');
+      if (response.ok && result.success) {
+        // Also save to localStorage as backup
+        localStorage.setItem('contact_page_content', JSON.stringify(content));
+        
+        // Dispatch custom event to notify other tabs/windows
+        window.dispatchEvent(new Event('contact_page_updated'));
+        
+        toast.success('✅ Page Contact mise à jour avec succès!');
+      } else {
+        toast.error('❌ Erreur lors de la sauvegarde: ' + (result.message || 'Erreur serveur'));
+      }
     } catch (error) {
+      console.error('Save error:', error);
       toast.error('❌ Erreur lors de la sauvegarde');
-      console.error(error);
     } finally {
       setIsSaving(false);
     }
