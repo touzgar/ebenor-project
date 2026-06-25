@@ -19,8 +19,7 @@ export const GET = withApiHandler(async (request: NextRequest) => {
   const categoriesWithCounts = await Promise.all(
     categories.map(async (category) => {
       const count = await Product.countDocuments({ 
-        category: category.slug,
-        isActive: true 
+        category: category.slug
       });
       
       return {
