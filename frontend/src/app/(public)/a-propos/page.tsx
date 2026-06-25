@@ -116,15 +116,59 @@ export default function AboutPage() {
 
   useEffect(() => {
     setMounted(true);
-    // Load content from localStorage (saved by admin)
-    const saved = localStorage.getItem('about_page_content');
-    if (saved) {
+    
+    // Load content from database first
+    const loadFromDatabase = async () => {
       try {
-        setContent(JSON.parse(saved));
+        const response = await fetch('/api/about');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            // Migrate old data structure to new structure if needed
+            const data = result.data;
+            
+            // Fix stats: if has 'number' field, convert to 'value'
+            if (data.stats && data.stats[0]?.number) {
+              data.stats = data.stats.map((stat: any) => ({
+                label: stat.label,
+                value: stat.number,
+                icon: stat.icon,
+              }));
+            }
+            
+            // Fix history: if has 'description' string, convert to 'paragraphs' array
+            if (data.history && typeof data.history.description === 'string') {
+              data.history.paragraphs = [data.history.description];
+              delete data.history.description;
+            }
+            
+            // Ensure history has paragraphs array
+            if (data.history && !data.history.paragraphs) {
+              data.history.paragraphs = [
+                'Fondée en 1998, ÉBENOR CRÉATION est née de la passion d\'artisans tunisiens pour le travail du bois noble.'
+              ];
+            }
+            
+            setContent(data);
+            return;
+          }
+        }
       } catch (error) {
-        console.error('Error loading about page content:', error);
+        console.error('Error loading about content from database:', error);
       }
-    }
+      
+      // Fallback to localStorage if database fails
+      const saved = localStorage.getItem('about_page_content');
+      if (saved) {
+        try {
+          setContent(JSON.parse(saved));
+        } catch (error) {
+          console.error('Error loading about page content:', error);
+        }
+      }
+    };
+    
+    loadFromDatabase();
   }, []);
 
   // Listen for storage changes (when admin saves in another tab/window)

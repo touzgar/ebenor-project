@@ -5,16 +5,18 @@ export interface IAboutContent {
     title: string;
     subtitle: string;
     description: string;
+    backgroundImage: string;
   };
   stats: Array<{
-    icon: string;
-    number: string;
     label: string;
+    value: string;
+    icon: string;
   }>;
   history: {
     title: string;
     subtitle: string;
-    description: string;
+    paragraphs: string[];
+    image: string;
   };
   timeline: Array<{
     year: string;
@@ -30,6 +32,12 @@ export interface IAboutContent {
       description: string;
     }>;
   };
+  cta: {
+    title: string;
+    description: string;
+    primaryButton: string;
+    secondaryButton: string;
+  };
   updatedBy?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -42,16 +50,18 @@ const AboutContentSchema = new Schema<AboutContentDocument>({
     title: { type: String, required: true },
     subtitle: { type: String, required: true },
     description: { type: String, required: true },
+    backgroundImage: { type: String, required: true },
   },
   stats: [{
-    icon: { type: String, required: true },
-    number: { type: String, required: true },
     label: { type: String, required: true },
+    value: { type: String, required: true },
+    icon: { type: String, required: true },
   }],
   history: {
     title: { type: String, required: true },
     subtitle: { type: String, required: true },
-    description: { type: String, required: true },
+    paragraphs: [{ type: String, required: true }],
+    image: { type: String, required: true },
   },
   timeline: [{
     year: { type: String, required: true },
@@ -66,6 +76,12 @@ const AboutContentSchema = new Schema<AboutContentDocument>({
       title: { type: String, required: true },
       description: { type: String, required: true },
     }],
+  },
+  cta: {
+    title: { type: String, required: true },
+    description: { type: String, required: true },
+    primaryButton: { type: String, required: true },
+    secondaryButton: { type: String, required: true },
   },
   updatedBy: { type: String },
 }, {

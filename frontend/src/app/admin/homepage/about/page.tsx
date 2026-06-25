@@ -130,7 +130,52 @@ export default function AboutAdminPage() {
         if (response.ok) {
           const result = await response.json();
           if (result.success && result.data) {
-            setContent(result.data);
+            // Migrate old data structure to new structure if needed
+            const data = result.data;
+            
+            // Fix stats: if has 'number' field, convert to 'value'
+            if (data.stats && data.stats[0]?.number) {
+              data.stats = data.stats.map((stat: any) => ({
+                label: stat.label,
+                value: stat.number,
+                icon: stat.icon,
+              }));
+            }
+            
+            // Fix history: if has 'description' string, convert to 'paragraphs' array
+            if (data.history && typeof data.history.description === 'string') {
+              data.history.paragraphs = [data.history.description];
+              delete data.history.description;
+            }
+            
+            // Ensure history has paragraphs array
+            if (data.history && !data.history.paragraphs) {
+              data.history.paragraphs = [
+                'Fondée en 1998, ÉBENOR CRÉATION est née de la passion d\'artisans tunisiens pour le travail du bois noble.'
+              ];
+            }
+            
+            // Ensure history has image
+            if (data.history && !data.history.image) {
+              data.history.image = '/logo/logo.jpg';
+            }
+            
+            // Ensure hero has backgroundImage
+            if (data.hero && !data.hero.backgroundImage) {
+              data.hero.backgroundImage = '/logo/logo.jpg';
+            }
+            
+            // Ensure cta exists
+            if (!data.cta) {
+              data.cta = {
+                title: 'Prêt à créer ensemble ?',
+                description: 'Transformons vos rêves en réalité avec notre savoir-faire artisanal',
+                primaryButton: 'Contactez-nous',
+                secondaryButton: 'Voir nos créations',
+              };
+            }
+            
+            setContent(data);
           }
         }
       } catch (error) {
@@ -699,20 +744,21 @@ export default function AboutAdminPage() {
                     </button>
                   </div>
                   <div className="space-y-4">
-                    {content.history.paragraphs.map((paragraph, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="flex gap-2"
-                      >
-                        <textarea
-                          value={paragraph}
-                          onChange={(e) => {
-                            const newParagraphs = [...content.history.paragraphs];
-                            newParagraphs[index] = e.target.value;
-                            setContent(prev => ({ ...prev, history: { ...prev.history, paragraphs: newParagraphs } }));
+                    {content.history.paragraphs && content.history.paragraphs.length > 0 ? (
+                      content.history.paragraphs.map((paragraph, index) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="flex gap-2"
+                        >
+                          <textarea
+                            value={paragraph}
+                            onChange={(e) => {
+                              const newParagraphs = [...content.history.paragraphs];
+                              newParagraphs[index] = e.target.value;
+                              setContent(prev => ({ ...prev, history: { ...prev.history, paragraphs: newParagraphs } }));
                           }}
                           rows={3}
                           className="flex-1 px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500"
@@ -725,7 +771,12 @@ export default function AboutAdminPage() {
                           <TrashIcon className="w-5 h-5" />
                         </button>
                       </motion.div>
-                    ))}
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-neutral-500">
+                      <p>Aucun paragraphe. Cliquez sur "Ajouter" pour en créer un.</p>
+                    </div>
+                  )}
                   </div>
                 </div>
 
