@@ -32,6 +32,7 @@ function ProduitsPageContent() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [mounted, setMounted] = useState(false);
+  const [showroomLoading, setShowroomLoading] = useState(true);
   
   // Showroom content state
   const [showroomContent, setShowroomContent] = useState({
@@ -75,7 +76,9 @@ function ProduitsPageContent() {
           });
         }
       } catch (err) {
-        // Silent fail
+        // Silent fail - keep default content
+      } finally {
+        setShowroomLoading(false);
       }
     };
 
@@ -238,12 +241,21 @@ function ProduitsPageContent() {
                 <Squares2X2Icon className="w-10 h-10 text-white" />
               </motion.div>
               
-              <h1 className="text-5xl lg:text-7xl font-bold text-neutral-900 mb-6">
-                {showroomContent.title} <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">{showroomContent.titleHighlight}</span>
-              </h1>
-              <p className="text-xl lg:text-2xl text-neutral-600 leading-relaxed">
-                {showroomContent.subtitle}
-              </p>
+              {showroomLoading ? (
+                <div className="animate-pulse space-y-4">
+                  <div className="h-16 bg-neutral-200 rounded-lg mx-auto w-3/4"></div>
+                  <div className="h-8 bg-neutral-200 rounded-lg mx-auto w-2/3"></div>
+                </div>
+              ) : (
+                <>
+                  <h1 className="text-5xl lg:text-7xl font-bold text-neutral-900 mb-6">
+                    {showroomContent.title} <span className="text-transparent bg-clip-text bg-gradient-to-r from-amber-600 to-amber-500">{showroomContent.titleHighlight}</span>
+                  </h1>
+                  <p className="text-xl lg:text-2xl text-neutral-600 leading-relaxed">
+                    {showroomContent.subtitle}
+                  </p>
+                </>
+              )}
             </motion.div>
           </div>
         </section>
