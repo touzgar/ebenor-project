@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { ContactContent } from '@/lib/models/ContactContent';
-import { connectToDatabase } from '@/lib/mongoose';
+import connectDB from '@/lib/db/mongodb';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 // GET - Get contact content (public route)
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase();
+    await connectDB();
     
     // Get the most recent contact content
     const contactContent = await ContactContent.findOne().sort({ updatedAt: -1 }).lean();

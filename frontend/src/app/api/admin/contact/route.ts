@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { withAuth } from '@/lib/auth-middleware';
+import { withApiHandler } from '@/lib/api-handler';
+import { requireAuth } from '@/lib/auth/helpers';
 import { ContactContent } from '@/lib/models/ContactContent';
-import { connectToDatabase } from '@/lib/mongoose';
 
 // Force dynamic rendering
 export const dynamic = 'force-dynamic';
 
 // GET - Get contact content
-export const GET = withAuth(async (request: NextRequest) => {
-  await connectToDatabase();
+export const GET = withApiHandler(async (request: NextRequest) => {
+  await requireAuth(request);
   
   // Get the most recent contact content
   let contactContent = await ContactContent.findOne().sort({ updatedAt: -1 }).lean();
@@ -82,16 +82,15 @@ export const GET = withAuth(async (request: NextRequest) => {
 });
 
 // PUT - Update contact content
-export const PUT = withAuth(async (request: NextRequest) => {
-  await connectToDatabase();
+export const PUT = withApiHandler(async (request: NextRequest) => {
+  const user = await requireAuth(request);
   
   const data = await request.json();
-  const adminEmail = request.headers.get('x-admin-email') || 'admin';
   
   // Update or create contact content (we only keep one document)
   const contactContent = await ContactContent.findOneAndUpdate(
     {},
-    { ...data, updatedBy: adminEmail },
+    { ...data, updatedBy: user.email },
     { new: true, upsert: true, runValidators: true }
   );
   
