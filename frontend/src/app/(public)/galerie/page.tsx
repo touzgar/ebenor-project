@@ -38,9 +38,24 @@ function GaleriePageContent() {
     },
   });
 
-  // Load content from localStorage
+  // Load content from database first, fallback to localStorage
   useEffect(() => {
-    const loadContent = () => {
+    const loadContent = async () => {
+      try {
+        // Try loading from database first
+        const response = await fetch('/api/projects');
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success && result.data) {
+            setPageContent(result.data);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error('Error loading projects content from database:', error);
+      }
+      
+      // Fallback to localStorage if database fails
       const saved = localStorage.getItem('projects_page_content');
       if (saved) {
         try {
