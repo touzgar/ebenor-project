@@ -368,73 +368,115 @@ function FooterEditorPage() {
             <div className="space-y-6">
               <h2 className="text-2xl font-bold text-neutral-900 mb-4">Informations de Contact</h2>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
-                    <PhoneIcon className="h-4 w-4 text-amber-600" />
-                    Téléphone
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.phone}
-                    onChange={(e) => setContent({
-                      ...content,
-                      contact: { ...content.contact, phone: e.target.value }
-                    })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="+216 XX XXX XXX"
-                  />
+              <div className="grid grid-cols-1 gap-6">
+                {/* Phone Numbers Section */}
+                <div className="border border-amber-200 bg-amber-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+                    <PhoneIcon className="h-5 w-5 text-amber-600" />
+                    Numéros de Téléphone
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        📱 Contact WhatsApp
+                      </label>
+                      <input
+                        type="text"
+                        value={content.contact.whatsapp}
+                        onChange={(e) => setContent({
+                          ...content,
+                          contact: { ...content.contact, whatsapp: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        placeholder="+216 56767801"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Affiché comme: "Contact WhatsApp : +216 56767801"
+                      </p>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-neutral-700 mb-2">
+                        ☎️ Num fixe
+                      </label>
+                      <input
+                        type="text"
+                        value={content.contact.phone}
+                        onChange={(e) => setContent({
+                          ...content,
+                          contact: { ...content.contact, phone: e.target.value }
+                        })}
+                        className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                        placeholder="+216 70147470"
+                      />
+                      <p className="text-xs text-neutral-500 mt-1">
+                        Affiché comme: "Num fixe : +216 70147470"
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
-                    <EnvelopeIcon className="h-4 w-4 text-amber-600" />
+                {/* Email Section */}
+                <div className="border border-blue-200 bg-blue-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+                    <EnvelopeIcon className="h-5 w-5 text-blue-600" />
                     Email
-                  </label>
-                  <input
-                    type="email"
-                    value={content.contact.email}
-                    onChange={(e) => setContent({
-                      ...content,
-                      contact: { ...content.contact, email: e.target.value }
-                    })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="contact@example.com"
-                  />
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      📧 Adresse Email
+                    </label>
+                    <input
+                      type="email"
+                      value={content.contact.email}
+                      onChange={(e) => setContent({
+                        ...content,
+                        contact: { ...content.contact, email: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      placeholder="Ebenorcreation@gmail.com"
+                    />
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2 flex items-center gap-2">
-                    <MapPinIcon className="h-4 w-4 text-amber-600" />
+                {/* Address Section */}
+                <div className="border border-green-200 bg-green-50 rounded-lg p-6">
+                  <h3 className="text-lg font-semibold text-neutral-900 mb-4 flex items-center gap-2">
+                    <MapPinIcon className="h-5 w-5 text-green-600" />
                     Adresse
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.address}
-                    onChange={(e) => setContent({
-                      ...content,
-                      contact: { ...content.contact, address: e.target.value }
-                    })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="Votre adresse..."
-                  />
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-neutral-700 mb-2">
+                      📍 Adresse Complète
+                    </label>
+                    <input
+                      type="text"
+                      value={content.contact.address}
+                      onChange={(e) => setContent({
+                        ...content,
+                        contact: { ...content.contact, address: e.target.value }
+                      })}
+                      className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      placeholder="HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022"
+                    />
+                    <p className="text-xs text-neutral-500 mt-1">
+                      Affiché comme: "Adresse : HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022"
+                    </p>
+                  </div>
                 </div>
+              </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    WhatsApp
-                  </label>
-                  <input
-                    type="text"
-                    value={content.contact.whatsapp}
-                    onChange={(e) => setContent({
-                      ...content,
-                      contact: { ...content.contact, whatsapp: e.target.value }
-                    })}
-                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-                    placeholder="+216XXXXXXXX"
-                  />
-                </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Aperçu dans le Footer:</strong><br/>
+                  • Contact WhatsApp : {content.contact.whatsapp}<br/>
+                  • Num fixe : {content.contact.phone}<br/>
+                  • Email : {content.contact.email}<br/>
+                  • Adresse : {content.contact.address}
+                </p>
               </div>
             </div>
           )}
