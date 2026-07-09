@@ -2,6 +2,7 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -171,12 +172,12 @@ export default function AdminLoginPage() {
                 </span>
               </label>
               
-              <button
-                type="button"
+              <Link
+                href="/admin/forgot-password"
                 className="text-sm text-amber-400 hover:text-amber-300 transition-colors"
               >
                 Mot de passe oublié ?
-              </button>
+              </Link>
             </div>
 
             {/* Submit button */}
