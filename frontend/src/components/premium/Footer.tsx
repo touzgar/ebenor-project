@@ -126,13 +126,18 @@ export function Footer() {
     : 'ÉBÉNOR CRÉATION - Votre partenaire de confiance pour la menuiserie et l\'ébénisterie d\'excellence en Tunisie. Depuis notre atelier, nous créons des pièces uniques alliant tradition artisanale et design contemporain.';
   
   const contactInfo = mounted && footerContent?.contact 
-    ? footerContent.contact 
+    ? {
+        phone: footerContent.contact.phone || '+216 70147470',
+        email: footerContent.contact.email || 'Ebenorcreation@gmail.com',
+        address: footerContent.contact.address || 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+        whatsapp: footerContent.contact.whatsapp || '+216 56767801'
+      }
     : {
-      phone: '+216 70147470',
-      email: 'Ebenorcreation@gmail.com',
-      address: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
-      whatsapp: '+216 56767801'
-    };
+        phone: '+216 70147470',
+        email: 'Ebenorcreation@gmail.com',
+        address: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+        whatsapp: '+216 56767801'
+      };
   
   const socialLinks = [
     { name: 'Facebook', icon: FaFacebook, href: mounted && footerContent?.social?.facebook ? footerContent.social.facebook : 'https://www.facebook.com/ebenorcreation' },

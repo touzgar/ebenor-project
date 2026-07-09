@@ -83,10 +83,10 @@ const defaultContent: FooterContent = {
     tagline: 'Artisan menuisier-ébéniste en Tunisie. Fabrication sur mesure de cuisines, dressings, mobilier et aménagements intérieurs haut de gamme.',
   },
   contact: {
-    phone: '+216 XX XXX XXX',
-    email: 'contact@ebenor-creation.tn',
-    address: 'Tunisie',
-    whatsapp: '+216XXXXXXXX',
+    phone: '+216 70147470',
+    email: 'Ebenorcreation@gmail.com',
+    address: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+    whatsapp: '+216 56767801',
   },
   social: {
     facebook: 'https://www.facebook.com/ebenorcreation',
