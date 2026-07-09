@@ -128,10 +128,10 @@ export function Footer() {
   const contactInfo = mounted && footerContent?.contact 
     ? footerContent.contact 
     : {
-      phone: '+216 XX XXX XXX',
-      email: 'contact@ebenor-creation.tn',
-      address: 'Tunisie',
-      whatsapp: '+216XXXXXXXX'
+      phone: '+216 70147470',
+      email: 'Ebenorcreation@gmail.com',
+      address: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+      whatsapp: '+216 56767801'
     };
   
   const socialLinks = [
@@ -232,9 +232,14 @@ export function Footer() {
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center text-gray-400">
                     <HiPhone className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
-                    <a href={`tel:${contactInfo.phone}`} className="hover:text-white transition-colors focus-visible-enhanced rounded">
-                      {contactInfo.phone}
-                    </a>
+                    <div className="flex flex-col">
+                      <a href={`https://wa.me/${contactInfo.whatsapp.replace(/\s/g, '')}`} className="hover:text-white transition-colors focus-visible-enhanced rounded" target="_blank" rel="noopener noreferrer">
+                        Contact WhatsApp : {contactInfo.whatsapp}
+                      </a>
+                      <a href={`tel:${contactInfo.phone}`} className="hover:text-white transition-colors focus-visible-enhanced rounded mt-1">
+                        Num fixe : {contactInfo.phone}
+                      </a>
+                    </div>
                   </div>
                   <div className="flex items-center text-gray-400">
                     <HiMail className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0" aria-hidden="true" />
@@ -245,7 +250,7 @@ export function Footer() {
                   <div className="flex items-start text-gray-400">
                     <HiLocationMarker className="w-5 h-5 text-[#C9A14A] mr-3 flex-shrink-0 mt-0.5" aria-hidden="true" />
                     <address className="not-italic">
-                      {contactInfo.address}
+                      Adresse : {contactInfo.address}
                     </address>
                   </div>
                 </div>
