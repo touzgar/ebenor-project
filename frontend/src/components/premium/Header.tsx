@@ -213,7 +213,7 @@ export function Header() {
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                     </svg>
-                    <span>Admin</span>
+                    <span>Login</span>
                   </span>
                   
                   {/* Effet glow au hover */}
@@ -414,7 +414,7 @@ export function Header() {
                     className="w-full px-8 sm:px-10 py-2.5 sm:py-3 border-2 border-[#C9A14A] text-[#C9A14A] font-semibold text-sm sm:text-base rounded-full hover:bg-[#C9A14A] hover:text-black transition-all duration-300 focus-visible-enhanced text-center"
                     aria-label="Connexion administrateur"
                   >
-                    Connexion Admin
+                    Login
                   </Link>
                 )}
                 

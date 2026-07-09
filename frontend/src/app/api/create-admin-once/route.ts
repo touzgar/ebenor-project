@@ -7,7 +7,7 @@ import { AdminUser } from '@/lib/models/AdminUser';
  * 
  * Crée un admin avec:
  * Email: Ebenorcreation@gmail.com
- * Password: 50136602m
+ * Password: Ebenor2024!
  * 
  * Utilisation: Appelez GET /api/create-admin-once UNE SEULE FOIS
  * Puis SUPPRIMEZ ce fichier!
@@ -31,12 +31,12 @@ export const GET = withApiHandler(async (request: NextRequest) => {
       });
     }
 
-    // Créer le nouvel admin
+    // Créer le nouvel admin avec un mot de passe qui respecte les règles
     const admin = new AdminUser({
       firstName: 'Ébenor',
       lastName: 'Création',
       email: 'Ebenorcreation@gmail.com',
-      password: '50136602m',
+      password: 'Ebenor2024!', // Mot de passe avec majuscule, minuscule, chiffre, caractère spécial
       role: 'super_admin',
       permissions: [], // Auto-rempli par le middleware basé sur le rôle
     });
@@ -51,8 +51,12 @@ export const GET = withApiHandler(async (request: NextRequest) => {
         name: `${admin.firstName} ${admin.lastName}`,
         role: admin.role
       },
+      credentials: {
+        email: 'Ebenorcreation@gmail.com',
+        password: 'Ebenor2024!'
+      },
       instructions: [
-        '1. Connectez-vous avec: Ebenorcreation@gmail.com / 50136602m',
+        '1. Connectez-vous avec: Ebenorcreation@gmail.com / Ebenor2024!',
         '2. Supprimez le fichier: frontend/src/app/api/create-admin-once/route.ts',
         '3. Redéployez le site'
       ]
