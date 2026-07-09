@@ -161,7 +161,7 @@ AdminUserSchema.methods.hasPermission = function(resource: string, action: strin
     return true;
   }
   
-  const permission = this.permissions.find(p => p.resource === resource);
+  const permission = this.permissions.find((p: any) => p.resource === resource);
   return permission ? permission.actions.includes(action as any) : false;
 };
 
@@ -170,11 +170,10 @@ AdminUserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
 
   try {
-    // TEMPORARILY DISABLED - Password validation will be re-enabled after admin creation
-    // const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    // if (!passwordRegex.test(this.password)) {
-    //   throw new Error('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial');
-    // }
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+    if (!passwordRegex.test(this.password)) {
+      throw new Error('Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial');
+    }
 
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
