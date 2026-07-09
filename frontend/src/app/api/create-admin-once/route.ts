@@ -7,7 +7,7 @@ import { AdminUser } from '@/lib/models/AdminUser';
  * 
  * Crée un admin avec:
  * Email: Ebenorcreation@gmail.com
- * Password: Ebenor2024!
+ * Password: 50136602m
  * 
  * Utilisation: Appelez GET /api/create-admin-once UNE SEULE FOIS
  * Puis SUPPRIMEZ ce fichier!
@@ -18,54 +18,64 @@ export const dynamic = 'force-dynamic';
 export const GET = withApiHandler(async (request: NextRequest) => {
   try {
     // Vérifier si l'admin existe déjà
-    const existingAdmin = await AdminUser.findOne({ email: 'Ebenorcreation@gmail.com' });
+    const existingAdmin = await AdminUser.findOne({ email: 'ebenorcreation@gmail.com' });
     
     if (existingAdmin) {
       return NextResponse.json({
-        success: false,
-        message: 'Admin existe déjà! Vous pouvez supprimer ce fichier.',
+        success: true,
+        message: '✅ Admin existe déjà! Testez la connexion avec: Ebenorcreation@gmail.com / 50136602m',
         admin: {
           email: existingAdmin.email,
-          name: `${existingAdmin.firstName} ${existingAdmin.lastName}`
-        }
+          name: `${existingAdmin.firstName} ${existingAdmin.lastName}`,
+          created: 'Already exists'
+        },
+        instructions: [
+          '1. Testez la connexion: https://ebenor-creation.com/admin/login',
+          '2. Email: Ebenorcreation@gmail.com',
+          '3. Password: 50136602m',
+          '4. Si ça marche, dites "ok" pour supprimer ce script'
+        ]
       });
     }
 
-    // Créer le nouvel admin avec un mot de passe qui respecte les règles
+    // Créer le nouvel admin
     const admin = new AdminUser({
       firstName: 'Ébenor',
       lastName: 'Création',
-      email: 'Ebenorcreation@gmail.com',
-      password: 'Ebenor2024!', // Mot de passe avec majuscule, minuscule, chiffre, caractère spécial
+      email: 'ebenorcreation@gmail.com', // lowercase pour MongoDB
+      password: '50136602m',
       role: 'super_admin',
-      permissions: [], // Auto-rempli par le middleware basé sur le rôle
+      permissions: [],
     });
     
     await admin.save();
 
     return NextResponse.json({
       success: true,
-      message: '✅ Admin créé avec succès! Vous pouvez maintenant supprimer ce fichier.',
+      message: '✅ Admin créé avec succès!',
       admin: {
         email: admin.email,
         name: `${admin.firstName} ${admin.lastName}`,
-        role: admin.role
+        role: admin.role,
+        created: 'Just now'
       },
       credentials: {
         email: 'Ebenorcreation@gmail.com',
-        password: 'Ebenor2024!'
+        password: '50136602m'
       },
       instructions: [
-        '1. Connectez-vous avec: Ebenorcreation@gmail.com / Ebenor2024!',
-        '2. Supprimez le fichier: frontend/src/app/api/create-admin-once/route.ts',
-        '3. Redéployez le site'
+        '1. Connectez-vous maintenant: https://ebenor-creation.com/admin/login',
+        '2. Email: Ebenorcreation@gmail.com',
+        '3. Password: 50136602m',
+        '4. Si ça marche, dites "ok" et le script sera supprimé'
       ]
     });
   } catch (error: any) {
     return NextResponse.json({
       success: false,
       message: 'Erreur lors de la création de l\'admin',
-      error: error.message
+      error: error.message,
+      stack: error.stack
     }, { status: 500 });
   }
 });
