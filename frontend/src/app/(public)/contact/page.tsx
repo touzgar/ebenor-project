@@ -86,8 +86,8 @@ const defaultContent: ContactPageContent = {
   },
   map: {
     title: 'Notre Localisation',
-    subtitle: 'Zone Industrielle, Tunis - Tunisie',
-    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d102948.82073654844!2d10.08080475!3d36.8064948!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12fd34cf7c5f06b1%3A0x6b94f7608db567e!2sZone%20Industrielle%2C%20Tunis%2C%20Tunisia!5e0!3m2!1sen!2s!4v1234567890123!5m2!1sen!2s',
+    subtitle: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275.8!2d10.569931!3d35.871037!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzXCsDUyJzE1LjciTiAxMMKwMzQnMTEuOCJF!5e0!3m2!1sfr!2stn!4v1652000000000!5m2!1sfr!2stn',
   },
   faq: {
     title: 'Questions Fréquentes',
