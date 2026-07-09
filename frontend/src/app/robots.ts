@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ebenor-creation.tn';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ebenor-creation.com';
 
 /**
  * Generate robots.txt file with appropriate directives

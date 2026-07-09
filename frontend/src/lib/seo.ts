@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ebenor-creation.tn';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://ebenor-creation.com';
 const SITE_NAME = 'ÉBENOR CRÉATION';
 const DEFAULT_DESCRIPTION = 'ÉBENOR CRÉATION - Menuiserie haut de gamme en Tunisie. Créations sur mesure en bois : cuisines, dressings, mobilier et aménagements d\'exception.';
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.jpg`;
