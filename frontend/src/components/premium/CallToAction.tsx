@@ -36,8 +36,8 @@ const defaultContent: CTAContent = {
   button2Text: 'Visiter notre showroom',
   button2Link: '/showroom',
   phone: '+216 70 123 456',
-  email: 'contact@ebenor-creation.tn',
-  address: 'Zone Industrielle Mghira 2, 2082 Fouchana, Tunis, Tunisie',
+  email: 'Ebenorcreation@gmail.com',
+  address: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
   backgroundImage: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=90',
   stats: [
     { icon: '🏆', number: '25+', label: 'Années d\'expérience' },
@@ -82,27 +82,12 @@ export function CallToAction() {
         
         // Fallback to localStorage only if database fetch failed
         console.log('⚠️ CallToAction: Database fetch failed, trying localStorage');
-        const saved = localStorage.getItem('homepage_content');
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (parsed.cta) {
-            console.log('📦 CallToAction: Loaded from localStorage fallback');
-            setContent({
-              ...defaultContent,
-              ...parsed.cta,
-              stats: parsed.cta.stats || defaultContent.stats
-            });
-          }
-        }
-      } catch (error) {
-        console.error('❌ Error loading CTA content:', error);
-        // Try localStorage as ultimate fallback
-        try {
+        if (typeof window !== 'undefined' && window.localStorage) {
           const saved = localStorage.getItem('homepage_content');
           if (saved) {
             const parsed = JSON.parse(saved);
             if (parsed.cta) {
-              console.log('📦 CallToAction: Loaded from localStorage (error fallback)');
+              console.log('📦 CallToAction: Loaded from localStorage fallback');
               setContent({
                 ...defaultContent,
                 ...parsed.cta,
@@ -110,8 +95,29 @@ export function CallToAction() {
               });
             }
           }
+        }
+      } catch (error) {
+        console.error('❌ Error loading CTA content:', error);
+        // Try localStorage as ultimate fallback
+        try {
+          if (typeof window !== 'undefined' && window.localStorage) {
+            const saved = localStorage.getItem('homepage_content');
+            if (saved) {
+              const parsed = JSON.parse(saved);
+              if (parsed.cta) {
+                console.log('📦 CallToAction: Loaded from localStorage (error fallback)');
+                setContent({
+                  ...defaultContent,
+                  ...parsed.cta,
+                  stats: parsed.cta.stats || defaultContent.stats
+                });
+              }
+            }
+          }
         } catch (e) {
           console.error('❌ localStorage fallback also failed:', e);
+          // Use default content - don't throw
+          setContent(defaultContent);
         }
       }
     };
