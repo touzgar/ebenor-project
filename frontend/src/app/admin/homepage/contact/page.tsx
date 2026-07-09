@@ -83,8 +83,8 @@ const defaultContent: ContactPageContent = {
   },
   map: {
     title: 'Notre Localisation',
-    subtitle: 'Zone Industrielle, Tunis - Tunisie',
-    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d102948.82073654844!2d10.08080475!3d36.8064948!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x12fd34cf7c5f06b1%3A0x6b94f7608db567e!2sZone%20Industrielle%2C%20Tunis%2C%20Tunisia!5e0!3m2!1sen!2s!4v1234567890123!5m2!1sen!2s',
+    subtitle: 'HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022',
+    embedUrl: 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275.8!2d10.569931304734139!3d35.87103703807379!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zMzXCsDUyJzE1LjciTiAxMMKwMzQnMTEuOCJF!5e0!3m2!1sfr!2stn!4v1652000000000!5m2!1sfr!2stn',
   },
   faq: {
     title: 'Questions Fréquentes',
@@ -530,46 +530,61 @@ function ContactEditorPage() {
 
               <div>
                 <label className="block text-sm font-medium text-neutral-700 mb-2">URL d'intégration Google Maps</label>
-                <textarea
-                  value={content.map.embedUrl}
-                  onChange={(e) => handleMapUrlChange(e.target.value)}
-                  rows={4}
-                  className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
-                  placeholder="https://www.google.com/maps/embed?pb=..."
-                />
                 
-                {/* Real-time validation warning */}
-                {mapUrlWarning && (
-                  <div className={`mt-2 p-3 rounded-lg border ${
-                    mapUrlWarning.startsWith('✅') 
-                      ? 'bg-green-50 border-green-200 text-green-800' 
-                      : 'bg-red-50 border-red-200 text-red-800'
-                  }`}>
-                    <p className="text-sm font-semibold">{mapUrlWarning}</p>
-                  </div>
-                )}
+                <div className="space-y-3">
+                  <textarea
+                    value={content.map.embedUrl}
+                    onChange={(e) => handleMapUrlChange(e.target.value)}
+                    onBlur={(e) => {
+                      // Auto-extract URL from iframe HTML if pasted
+                      const value = e.target.value.trim();
+                      if (value.startsWith('<iframe') && value.includes('src=')) {
+                        const match = value.match(/src=["']([^"']+)["']/);
+                        if (match && match[1]) {
+                          const extractedUrl = match[1];
+                          setContent({ ...content, map: { ...content.map, embedUrl: extractedUrl } });
+                          handleMapUrlChange(extractedUrl);
+                          toast.success('✅ URL extraite automatiquement du code HTML!');
+                        }
+                      }
+                    }}
+                    rows={4}
+                    className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
+                    placeholder="https://www.google.com/maps/embed?pb=..."
+                  />
+                  
+                  {/* Real-time validation warning */}
+                  {mapUrlWarning && (
+                    <div className={`p-3 rounded-lg border ${
+                      mapUrlWarning.startsWith('✅') 
+                        ? 'bg-green-50 border-green-200 text-green-800' 
+                        : 'bg-red-50 border-red-200 text-red-800'
+                    }`}>
+                      <p className="text-sm font-semibold">{mapUrlWarning}</p>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="mt-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                  <p className="text-sm font-semibold text-blue-900 mb-2">💡 ASTUCE: Vous pouvez coller directement le code HTML complet!</p>
+                  <p className="text-xs text-blue-800">Si vous collez tout le code <code className="bg-blue-100 px-1 rounded">&lt;iframe src="..."&gt;</code>, l'URL sera automatiquement extraite.</p>
+                </div>
                 
                 <div className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm font-semibold text-amber-900 mb-2">📍 Comment obtenir l'URL correcte :</p>
+                  <p className="text-sm font-semibold text-amber-900 mb-2">📍 Comment obtenir l'URL :</p>
                   <ol className="text-sm text-amber-800 space-y-1 list-decimal list-inside">
-                    <li>Allez sur <strong>Google Maps</strong> (google.com/maps)</li>
-                    <li>Recherchez votre adresse: <code className="bg-amber-100 px-1 rounded">HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022</code></li>
-                    <li>Cliquez sur le bouton <strong>"Partager"</strong> ou <strong>"Share"</strong></li>
-                    <li>Cliquez sur l'onglet <strong>"Intégrer une carte"</strong> ou <strong>"Embed a map"</strong></li>
+                    <li>Allez sur <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="underline font-semibold">Google Maps</a></li>
+                    <li>Recherchez: <code className="bg-amber-100 px-1 rounded">HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022</code></li>
+                    <li>Cliquez sur <strong>"Partager"</strong> ou <strong>"Share"</strong></li>
+                    <li>Cliquez sur <strong>"Intégrer une carte"</strong> ou <strong>"Embed a map"</strong></li>
                     <li>Cliquez sur <strong>"COPIER LE CODE HTML"</strong></li>
-                    <li>Dans le code HTML, trouvez l'URL qui commence par <code className="bg-amber-100 px-1 rounded">src="https://www.google.com/maps/embed?pb=</code></li>
-                    <li>Copiez <strong>UNIQUEMENT cette URL</strong> (entre les guillemets du src) et collez-la ici</li>
+                    <li>Collez le code ici (l'URL sera extraite automatiquement) ou copiez uniquement l'URL</li>
                   </ol>
                   <div className="mt-3 p-2 bg-white rounded border border-amber-300">
-                    <p className="text-xs font-semibold text-amber-900 mb-1">Exemple de ce que vous devez copier:</p>
-                    <code className="text-xs text-amber-800 break-all">
-                      https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275...
-                    </code>
+                    <p className="text-xs font-semibold text-amber-900 mb-1">✅ Formats acceptés:</p>
+                    <p className="text-xs text-green-700 mb-1">• L'URL seule: <code className="bg-green-50 px-1">https://www.google.com/maps/embed?pb=...</code></p>
+                    <p className="text-xs text-green-700">• Le code HTML complet: <code className="bg-green-50 px-1">&lt;iframe src="..."&gt;&lt;/iframe&gt;</code></p>
                   </div>
-                  <p className="text-xs text-amber-700 mt-2 font-medium">
-                    ❌ Ne pas utiliser: <code className="bg-red-100 px-1 rounded">google.com/maps/search</code><br/>
-                    ✅ Utiliser: <code className="bg-green-100 px-1 rounded">google.com/maps/embed?pb=</code>
-                  </p>
                 </div>
               </div>
             </div>
