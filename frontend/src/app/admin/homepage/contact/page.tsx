@@ -116,6 +116,28 @@ function ContactEditorPage() {
   const [content, setContent] = useState<ContactPageContent>(defaultContent);
   const [isSaving, setIsSaving] = useState(false);
   const [activeSection, setActiveSection] = useState<string>('hero');
+  const [mapUrlWarning, setMapUrlWarning] = useState<string>('');
+
+  // Validate map URL format
+  const handleMapUrlChange = (url: string) => {
+    setContent({ ...content, map: { ...content.map, embedUrl: url } });
+    
+    // Check if it's a search URL (wrong format)
+    if (url.includes('google.com/maps/search') || url.includes('?api=1&query=')) {
+      setMapUrlWarning('⚠️ ATTENTION: Ceci est une URL de recherche, pas une URL d\'intégration! La carte ne s\'affichera pas. Suivez les instructions ci-dessous.');
+    } 
+    // Check if it's the correct embed URL
+    else if (url.includes('google.com/maps/embed?pb=')) {
+      setMapUrlWarning('✅ URL correcte! La carte s\'affichera correctement.');
+    }
+    // Empty or other format
+    else if (url.trim() === '') {
+      setMapUrlWarning('');
+    }
+    else {
+      setMapUrlWarning('⚠️ Format d\'URL non reconnu. Assurez-vous d\'utiliser une URL d\'intégration Google Maps.');
+    }
+  };
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -510,14 +532,45 @@ function ContactEditorPage() {
                 <label className="block text-sm font-medium text-neutral-700 mb-2">URL d'intégration Google Maps</label>
                 <textarea
                   value={content.map.embedUrl}
-                  onChange={(e) => setContent({ ...content, map: { ...content.map, embedUrl: e.target.value } })}
+                  onChange={(e) => handleMapUrlChange(e.target.value)}
                   rows={4}
                   className="w-full px-4 py-3 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent font-mono text-sm"
                   placeholder="https://www.google.com/maps/embed?pb=..."
                 />
-                <p className="text-sm text-neutral-500 mt-2">
-                  Allez sur Google Maps → Cliquez sur "Partager" → "Intégrer une carte" → Copiez l'URL
-                </p>
+                
+                {/* Real-time validation warning */}
+                {mapUrlWarning && (
+                  <div className={`mt-2 p-3 rounded-lg border ${
+                    mapUrlWarning.startsWith('✅') 
+                      ? 'bg-green-50 border-green-200 text-green-800' 
+                      : 'bg-red-50 border-red-200 text-red-800'
+                  }`}>
+                    <p className="text-sm font-semibold">{mapUrlWarning}</p>
+                  </div>
+                )}
+                
+                <div className="mt-3 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm font-semibold text-amber-900 mb-2">📍 Comment obtenir l'URL correcte :</p>
+                  <ol className="text-sm text-amber-800 space-y-1 list-decimal list-inside">
+                    <li>Allez sur <strong>Google Maps</strong> (google.com/maps)</li>
+                    <li>Recherchez votre adresse: <code className="bg-amber-100 px-1 rounded">HMADA KEBIRA RTE TUNIS, Akouda, Sousse, 4022</code></li>
+                    <li>Cliquez sur le bouton <strong>"Partager"</strong> ou <strong>"Share"</strong></li>
+                    <li>Cliquez sur l'onglet <strong>"Intégrer une carte"</strong> ou <strong>"Embed a map"</strong></li>
+                    <li>Cliquez sur <strong>"COPIER LE CODE HTML"</strong></li>
+                    <li>Dans le code HTML, trouvez l'URL qui commence par <code className="bg-amber-100 px-1 rounded">src="https://www.google.com/maps/embed?pb=</code></li>
+                    <li>Copiez <strong>UNIQUEMENT cette URL</strong> (entre les guillemets du src) et collez-la ici</li>
+                  </ol>
+                  <div className="mt-3 p-2 bg-white rounded border border-amber-300">
+                    <p className="text-xs font-semibold text-amber-900 mb-1">Exemple de ce que vous devez copier:</p>
+                    <code className="text-xs text-amber-800 break-all">
+                      https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3275...
+                    </code>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-2 font-medium">
+                    ❌ Ne pas utiliser: <code className="bg-red-100 px-1 rounded">google.com/maps/search</code><br/>
+                    ✅ Utiliser: <code className="bg-green-100 px-1 rounded">google.com/maps/embed?pb=</code>
+                  </p>
+                </div>
               </div>
             </div>
           )}
