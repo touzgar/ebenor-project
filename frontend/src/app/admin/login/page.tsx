@@ -124,7 +124,7 @@ export default function AdminLoginPage() {
               <Input
                 type="email"
                 label="Adresse email"
-                placeholder="admin@ebenor-creation.tn"
+                placeholder="username@gmail.com"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
                 error={errors.email}
